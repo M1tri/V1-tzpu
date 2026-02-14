@@ -1,0 +1,63 @@
+@baseUrl = https://localhost:7213
+
+
+### ROOMS
+
+### Vrati sve sobe
+GET {{baseUrl}}/api/rooms/GetRooms
+Accept: application/json
+
+### Dodaj sobu
+POST {{baseUrl}}/api/rooms/AddRoom
+Content-Type: application/json
+
+{
+    "naziv" : "Sala-3"
+}
+
+###
+
+
+### ACTIVITES
+
+### Vrati sve aktivnosti
+GET {{baseUrl}}/api/activities/GetActivities
+Accept: application/json
+
+### Dodaj sobu
+POST {{baseUrl}}/api/activities/AddActivity
+Content-Type: application/json
+
+{
+    "name" : "AOR-LV2",
+    "vlrids" : [
+        "abcdfg123"
+    ]
+}
+
+
+###
+
+### Sessions
+
+### Vrati sve sesije
+GET {{baseUrl}}/api/Session/GetSessions
+Accept: application/json
+
+### Dodaj sobu
+POST {{baseUrl}}/api/Session/AddSession
+Content-Type: application/json
+
+{
+    "roomId": 1,
+    "activityId": 3,
+    "datum": "2026-02-14",
+    "vremePocetka": "10:00:00",
+    "vremeKraja": "12:00:00",
+    "stanje": 0,
+    "automatskiPocetak": true,
+    "automatskiKraj": false,
+    "automatskoStanjeZavrsavanja": 4
+}
+
+###

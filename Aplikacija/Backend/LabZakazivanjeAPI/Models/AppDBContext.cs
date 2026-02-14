@@ -1,0 +1,25 @@
+namespace LabZakazivanjeAPI.Models;
+
+using Microsoft.EntityFrameworkCore;
+
+public class AppDBContext : DbContext
+{
+    public DbSet<Room> Rooms {get; set;}
+    public DbSet<Activity> Activities {get; set;}
+    public DbSet<Session> Sessions {get; set;}
+
+    public AppDBContext(DbContextOptions<AppDBContext> options)
+        : base(options)
+    {
+        
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Session>()
+            .Property(r => r.Stanje)
+            .HasConversion<string>();
+    }
+}
