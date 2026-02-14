@@ -28,3 +28,6 @@ yarn-error.log*
 # OS / IDE
 .DS_Store
 Thumbs.db
+
+# SQLite
+*.db
