@@ -27,7 +27,8 @@ public class RoomsController : ControllerBase
         Room room = new Room
         {
             Naziv = r.Naziv,
-            Raspored = r.Raspored
+            Raspored = r.Raspored,
+            Capacity = r.Capacity
         };
 
         await m_context.Rooms.AddAsync(room);

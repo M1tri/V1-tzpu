@@ -1,4 +1,6 @@
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Services;
+using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.EntityFrameworkCore;
@@ -9,50 +11,40 @@ namespace LabZakazivanjeAPI.Controllers;
 [Route("api/sessions")]
 public class SessionController : ControllerBase
 {
-    private readonly AppDBContext m_context;
+    private readonly ISessionService m_sessionService;
 
-    public SessionController(AppDBContext context)
+    public SessionController(ISessionService sessionService)
     {
-        m_context = context;
+        m_sessionService = sessionService;
     }
 
     [HttpGet("GetSessions")]
-    public async Task<IEnumerable<Session>> GetSessions()
+    public async Task<ActionResult<IEnumerable<Session>>> GetSessions()
     {
-        return await m_context.Sessions.ToListAsync();
+        var sessions = await m_sessionService.GetSessions();
+
+        if (sessions.Success)
+        {
+            return Ok(sessions.Data);
+        }
+        else
+        {
+            return BadRequest(sessions.ErrorMessage);
+        }
     }
 
     [HttpPost("AddSession")]
     public async Task<ActionResult<Session>> AddSession([FromBody] Session s)
     {
-        var room = await m_context.Rooms.Where(r => r.Id == s.RoomId).FirstOrDefaultAsync();
-        if (room == null)
+        var session = await m_sessionService.AddSession(s);
+
+        if (session.Success)
         {
-            return BadRequest("Nepostojeća soba");
+            return Ok(session.Data);
         }
-
-        var activity = await m_context.Activities.Where(a => a.Id == s.ActivityId).FirstOrDefaultAsync();
-        if (activity == null)
+        else
         {
-            return BadRequest("Nepostojeća aktivnost!");
+            return BadRequest(session.ErrorMessage);
         }
-
-        Session sesija = new Session
-        {
-            Prostorija = room,
-            Aktivnost = activity,
-            Datum = s.Datum,
-            VremePocetka = s.VremePocetka,
-            VremeKraja = s.VremeKraja,
-            AutomatskiPocetak = s.AutomatskiPocetak,
-            AutomatskiKraj = s.AutomatskiKraj,
-            AutomatskoStanjeZavrsavanja = s.AutomatskoStanjeZavrsavanja,
-            Stanje = SessionState.PLANNED,
-        };
-
-        await m_context.Sessions.AddAsync(sesija);
-        await m_context.SaveChangesAsync();
-
-        return Ok(sesija);
     }
 }

@@ -3,6 +3,7 @@ using System;
 using LabZakazivanjeAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LabZakazivanjeAPI.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260215130955_Migracija4")]
+    partial class Migracija4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -35,9 +38,6 @@ namespace LabZakazivanjeAPI.Migrations
                     b.Property<int?>("SeatId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -50,8 +50,6 @@ namespace LabZakazivanjeAPI.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("SessionId");
 
                     b.ToTable("ActiveVLRs");
                 });
@@ -138,17 +136,6 @@ namespace LabZakazivanjeAPI.Migrations
                     b.HasIndex("RoomId");
 
                     b.ToTable("Sessions");
-                });
-
-            modelBuilder.Entity("LabZakazivanjeAPI.Models.ActiveVLR", b =>
-                {
-                    b.HasOne("LabZakazivanjeAPI.Models.Session", "SesijaVlasnik")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SesijaVlasnik");
                 });
 
             modelBuilder.Entity("LabZakazivanjeAPI.Models.Session", b =>

@@ -6,21 +6,21 @@ public class RoomRasporedParser
 {
     public record Seat(int? Id, string? IP);
 
-    public static List<List<Seat>> ParserRaspored(string raspored)
+    public static List<List<Seat>> ParseRaspored(string raspored)
     {
         // ((id:ip, id:ip), (id:ip, id:ip, id:ip), (id:ip),)
 
         var result = new List<List<Seat>>();
-    
+
         if (string.IsNullOrEmpty(raspored))
         {
             return result;
         }
 
+        int zagrade = 0;
         raspored = raspored.Trim();
         raspored = raspored[1..^1];
-        
-        int zagrade = 0;
+
         StringBuilder current = new StringBuilder("");
 
         foreach (char c in raspored)
@@ -28,24 +28,21 @@ public class RoomRasporedParser
             if (c == '(')
             {
                 zagrade++;
-                if (zagrade == 1)
-                    continue;
+                continue;
             }
 
             if (c == ')')
             {
-                zagrade--;
-                if (zagrade == 0)
-                {
-                    var parsedRed = ParseRed(current.ToString());
-                    result.Add(parsedRed);
-                    current.Clear();
-                    continue;
-                }
+                var parsedRed = ParseRed(current.ToString());
+                result.Add(parsedRed);
+                current.Clear();
+                continue;
             }
 
-            if (zagrade >= 2)
-                current.Append(c);
+            if (zagrade == 0 && c == ',')
+                continue;
+            
+            current.Append(c);
         }
 
         return result;
@@ -62,8 +59,11 @@ public class RoomRasporedParser
             var trimmed = p.Trim();
 
             if (string.IsNullOrEmpty(trimmed))
+            {
                 parsedRed.Add(new Seat(null, null));
-            
+                continue;
+            }
+
             string[] parts = p.Split(':');
 
             if (parts.Length == 2)

@@ -12,11 +12,12 @@ POST {{baseUrl}}/api/rooms/AddRoom
 Content-Type: application/json
 
 {
-    "naziv" : "Sala-3"
+    "naziv" : "R2",
+    "raspored" : "((1:12.23.42.11, ,2:23.23.11.12),(3:12.23.42.11, 4:23.23.11.12, ))",
+    "capacity" : 4
 }
 
 ###
-
 
 ### ACTIVITES
 
@@ -29,35 +30,46 @@ POST {{baseUrl}}/api/activities/AddActivity
 Content-Type: application/json
 
 {
-    "name" : "AOR-LV2",
+    "name" : "Racunarski Vid LV1",
     "vlrids" : [
-        "abcdfg123"
+        "pycharm"
     ]
 }
-
 
 ###
 
 ### Sessions
 
 ### Vrati sve sesije
-GET {{baseUrl}}/api/Session/GetSessions
+GET {{baseUrl}}/api/sessions/GetSessions
 Accept: application/json
 
 ### Dodaj sobu
-POST {{baseUrl}}/api/Session/AddSession
+POST {{baseUrl}}/api/sessions/AddSession
 Content-Type: application/json
 
 {
-    "roomId": 1,
-    "activityId": 3,
-    "datum": "2026-02-14",
-    "vremePocetka": "10:00:00",
-    "vremeKraja": "12:00:00",
+    "roomId": 7,
+    "activityId": 8,
+    "datum": "2026-02-15",
+    "vremePocetka": "12:00:00",
+    "vremeKraja": "16:00:00",
     "stanje": 0,
     "automatskiPocetak": true,
     "automatskiKraj": false,
     "automatskoStanjeZavrsavanja": 4
 }
 
+###
+
+### VLRController
+
+### Proglasi sesiju za next
+PUT {{baseUrl}}/api/vlr/PromoteAsNext?sessionId=5
+Content-Type: application/json
+
+
+### Aktiviraj next sesiju
+PUT {{baseUrl}}/api/vlr/Activate?sessionId=5
+Content-Type: application/json
 ###

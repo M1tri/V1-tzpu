@@ -7,6 +7,7 @@ public class AppDBContext : DbContext
     public DbSet<Room> Rooms {get; set;}
     public DbSet<Activity> Activities {get; set;}
     public DbSet<Session> Sessions {get; set;}
+    public DbSet<ActiveVLR> ActiveVLRs {get; set;}
 
     public AppDBContext(DbContextOptions<AppDBContext> options)
         : base(options)
@@ -20,6 +21,10 @@ public class AppDBContext : DbContext
 
         modelBuilder.Entity<Session>()
             .Property(r => r.Stanje)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<ActiveVLR>()
+            .Property(r => r.Status)
             .HasConversion<string>();
     }
 }

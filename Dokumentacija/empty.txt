@@ -1,0 +1,5 @@
+Microsoft SQL: 
+
+Instaliran packet Microsoft.EntityFrameworkCore.Sqlite
+Opciono Instaliran packet Microsoft.EntityFrameworkCore.Tools
+DB Browser takodje opcionalan
