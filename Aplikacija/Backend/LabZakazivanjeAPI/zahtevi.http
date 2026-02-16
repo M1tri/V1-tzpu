@@ -25,7 +25,7 @@ Content-Type: application/json
 GET {{baseUrl}}/api/activities/GetActivities
 Accept: application/json
 
-### Dodaj sobu
+### Dodaj aktivnost
 POST {{baseUrl}}/api/activities/AddActivity
 Content-Type: application/json
 

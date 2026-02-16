@@ -15,6 +15,8 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 builder.Services.AddHostedService<TimeSchedulerService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IVLRService, VLRService>();
+builder.Services.AddScoped<IActivityService, ActivityService>();
+builder.Services.AddScoped<IRoomsService, RoomsService>();
 
 var app = builder.Build();
 

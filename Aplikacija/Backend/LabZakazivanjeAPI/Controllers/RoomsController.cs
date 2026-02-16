@@ -1,6 +1,7 @@
 namespace LabZakazivanjeAPI.Controllers;
 
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,31 +9,40 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/rooms")]
 public class RoomsController : ControllerBase
 {
-    private readonly AppDBContext m_context;
+    private readonly IRoomsService m_roomsService;
 
-    public RoomsController(AppDBContext context)
+    public RoomsController(IRoomsService roomsService)
     {
-        m_context = context;
+        m_roomsService = roomsService;
     }
 
     [HttpGet("GetRooms")]
-    public async Task<IEnumerable<Room>> GetRooms()
+    public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
     {
-        return await m_context.Rooms.ToListAsync();
+        var rooms = await m_roomsService.GetRooms();
+
+        if (rooms.Success)
+        {
+            return Ok(rooms.Data);
+        }
+        else
+        {
+            return BadRequest(rooms.ErrorMessage);
+        }
     }
 
     [HttpPost("AddRoom")]
     public async Task<ActionResult<Room>> AddRoom([FromBody] Room r)
     {
-        Room room = new Room
-        {
-            Naziv = r.Naziv,
-            Raspored = r.Raspored,
-            Capacity = r.Capacity
-        };
+        var room = await m_roomsService.AddRooms(r);
 
-        await m_context.Rooms.AddAsync(room);
-        await m_context.SaveChangesAsync();
-        return Ok(room);
+        if (room.Success)
+        {
+            return Ok(room.Data);
+        }
+        else
+        {
+            return BadRequest(room.ErrorMessage);
+        }
     }
 }

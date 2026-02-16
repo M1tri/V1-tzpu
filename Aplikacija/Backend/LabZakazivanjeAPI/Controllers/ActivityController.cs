@@ -1,4 +1,5 @@
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,31 +9,40 @@ namespace LabZakazivanjeAPI.Controllers;
 [Route("api/activities")]
 public class ActivityController : ControllerBase
 {
-    private AppDBContext m_context;
+    private readonly IActivityService m_activityService;
 
-    public ActivityController(AppDBContext context)
+    public ActivityController(IActivityService activityService)
     {
-        m_context = context;
+        m_activityService = activityService;
     }
 
     [HttpGet("GetActivities")]
-    public async Task<IEnumerable<Activity>> GetActivities()
+    public async Task<ActionResult<IEnumerable<Activity>>> GetActivities()
     {
-        return await m_context.Activities.ToListAsync();
+        var activities = await m_activityService.GetActivites();
+
+        if (activities.Success)
+        {
+            return Ok(activities.Data);
+        }
+        else
+        {
+            return BadRequest(activities.ErrorMessage);
+        }
     }
 
     [HttpPost("AddActivity")]
     public async Task<ActionResult<Activity>> AddActivity([FromBody] Activity a)
     {
-        Activity activity = new Activity
+        var activity = await m_activityService.AddActivity(a);
+
+        if (activity.Success)
         {
-            Name = a.Name,
-            VLRIDS = a.VLRIDS
-        };
-
-        await m_context.Activities.AddAsync(activity);
-        await m_context.SaveChangesAsync();
-
-        return Ok(activity);
+            return Ok(activity.Data);
+        }
+        else
+        {
+            return BadRequest(activity.ErrorMessage);
+        }
     }
 }
