@@ -12,7 +12,7 @@ POST {{baseUrl}}/api/rooms/AddRoom
 Content-Type: application/json
 
 {
-    "naziv" : "R2",
+    "naziv" : "E1",
     "raspored" : "((1:12.23.42.11, ,2:23.23.11.12),(3:12.23.42.11, 4:23.23.11.12, ))",
     "capacity" : 4
 }
@@ -30,9 +30,9 @@ POST {{baseUrl}}/api/activities/AddActivity
 Content-Type: application/json
 
 {
-    "name" : "Racunarski Vid LV1",
+    "name" : "Programski prevodioci LV1",
     "vlrids" : [
-        "pycharm"
+        "Eclipse"
     ]
 }
 
@@ -49,13 +49,13 @@ POST {{baseUrl}}/api/sessions/AddSession
 Content-Type: application/json
 
 {
-    "roomId": 7,
-    "activityId": 8,
+    "roomId": 8,
+    "activityId": 11,
     "datum": "2026-02-15",
     "vremePocetka": "12:00:00",
     "vremeKraja": "16:00:00",
     "stanje": 0,
-    "automatskiPocetak": true,
+    "automatskiPocetak": false,
     "automatskiKraj": false,
     "automatskoStanjeZavrsavanja": 4
 }
@@ -64,12 +64,31 @@ Content-Type: application/json
 
 ### VLRController
 
-### Proglasi sesiju za next
-PUT {{baseUrl}}/api/vlr/PromoteAsNext?sessionId=5
-Content-Type: application/json
+@session = 19
 
+### Proglasi sesiju za next
+PUT {{baseUrl}}/api/vlr/PromoteAsNext?sessionId={{session}}
+Content-Type: application/json
 
 ### Aktiviraj next sesiju
-PUT {{baseUrl}}/api/vlr/Activate?sessionId=5
+PUT {{baseUrl}}/api/vlr/Activate?sessionId={{session}}
 Content-Type: application/json
 ###
+
+### Pokrene zavrsavanje za aktivnu sesiju
+PUT {{baseUrl}}/api/vlr/Fade?sessionId={{session}}
+Content-Type: application/json
+###
+
+### Ugasi sesiju
+PUT {{baseUrl}}/api/vlr/Terminate?sessionId={{session}}
+Content-Type: application/json
+###
+
+### Provide nekom korisniku
+PUT {{baseUrl}}/api/vlr/Provide?sessionId=20&seatId=2&userId=1004
+Content-Type: application/json
+
+### Release od korisnika
+PUT {{baseUrl}}/api/vlr/Release?sessionId=19&userId=1002
+Content-Type: application/json

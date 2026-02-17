@@ -140,6 +140,8 @@ public class SessionService : ISessionService
         .Include(s => s.Aktivnost)
         .FirstOrDefaultAsync(s => s.Id == sessionId);
 
+        Console.WriteLine(sesija);
+
         if (sesija == null)
             return ServiceResult<string>.Error("Ne postoji sesija sa tim ID-em");
         
@@ -174,12 +176,11 @@ public class SessionService : ISessionService
         var fadingSession = await m_context.Sessions
         .FirstOrDefaultAsync(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.FADING);
 
-        // TODO metoda koja vraca prikladinju strukturu
+        // TODO metoda koja vraca prikladniju strukturu
         var seatIps = RoomRasporedParser.ParseRaspored(sesija.Prostorija!.Raspored);
 
         if (fadingSession == null)
         {
-            // nema fading sesije s kojom bi bio moguc konflikt, slobodno dodeljujemo IP-eve
             foreach (var row in seatIps)
             {
                 foreach (var seat in row)
@@ -191,7 +192,26 @@ public class SessionService : ISessionService
         }
         else
         {
-            
+            result = await GetSessionResourceStatus(fadingSession.Id);
+            Dictionary<int, VLRStatus?> fadingSeasonSetIps;
+
+            if(result.Success)
+                fadingSeasonSetIps = result.Data!;
+            else
+                return ServiceResult<string>.Error("Greska pri nabavljanju statsua mesta");
+
+            foreach (var row in seatIps)
+            {
+                foreach (var seat in row)
+                {
+                    if (seat.Id != null && seat.IP != null)
+                    {
+                        if (fadingSeasonSetIps.TryGetValue(seat.Id.Value, out VLRStatus? value) && value != null && value.Value == VLRStatus.PROVIDED)
+                            continue;
+                        await m_vlrService.ReadyVLR(sessionId, seat.Id.Value, seat.IP);
+                    }
+                }
+            }
         }
         
         sesija.Stanje = SessionState.ACTIVE;
@@ -201,13 +221,71 @@ public class SessionService : ISessionService
         return ServiceResult<string>.Ok("Dodeljeno");
     }
 
-    public Task<ServiceResult<string>> Fade(int sessionId)
+    public async Task<ServiceResult<string>> Fade(int sessionId)
     {
-        throw new NotImplementedException();
+        var sesija = await m_context.Sessions
+        .Include(s => s.Prostorija)
+        .Include(s => s.Aktivnost)
+        .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+        if (sesija == null)
+            return ServiceResult<string>.Error("Ne postoji sesija sa tim ID-em");
+        
+        if (sesija.Stanje != SessionState.ACTIVE)
+            return ServiceResult<string>.Error("Sesija mora biti u stanju ACTIVE da bi presala u FADING");
+    
+        sesija.Stanje = SessionState.FADING;
+
+        m_context.Sessions.Update(sesija);
+
+        var nonProvidedVlrs = await m_context.ActiveVLRs
+        .Where(
+            v => v.SessionId == sessionId && (
+            v.Status == VLRStatus.READY || v.Status == VLRStatus.IN_PREPERATION
+        )).ToListAsync();
+
+        foreach (var vlr in nonProvidedVlrs)
+        {
+            // TODO ERROR CHECKING
+            await m_vlrService.KillVLR(sessionId, vlr.SeatId!.Value);
+        }
+
+        await m_context.SaveChangesAsync();
+
+        return ServiceResult<string>.Ok("Sesija presla u fading stanje");
     }
 
-    public Task<ServiceResult<string>> Terminate(int sessionId)
+    public async Task<ServiceResult<string>> Terminate(int sessionId)
     {
-        throw new NotImplementedException();
+                var sesija = await m_context.Sessions
+        .Include(s => s.Prostorija)
+        .Include(s => s.Aktivnost)
+        .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+        if (sesija == null)
+            return ServiceResult<string>.Error("Ne postoji sesija sa tim ID-em");
+        
+        if (sesija.Stanje != SessionState.ACTIVE && sesija.Stanje != SessionState.FADING)
+            return ServiceResult<string>.Error("Sesija mora biti u stanju ACTIVE/FADING da bi presala u Terminated");
+    
+        sesija.Stanje = SessionState.FINISHED;
+
+        m_context.Sessions.Update(sesija);
+
+        var nonProvidedVlrs = await m_context.ActiveVLRs
+        .Where(
+            v => v.SessionId == sessionId && (
+            v.Status == VLRStatus.READY || v.Status == VLRStatus.IN_PREPERATION || v.Status == VLRStatus.PROVIDED || v.Status == VLRStatus.RELEASED
+        )).ToListAsync();
+
+        foreach (var vlr in nonProvidedVlrs)
+        {
+            // TODO ERROR CHECKING
+            await m_vlrService.KillVLR(sessionId, vlr.SeatId!.Value);
+        }
+
+        await m_context.SaveChangesAsync();
+
+        return ServiceResult<string>.Ok("Sesija presla u fading stanje");
     }
 }

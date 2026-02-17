@@ -72,7 +72,7 @@ public class VLRService : IVLRService
 
         // prvi koji je u pripremi
         var vlr = await m_context.ActiveVLRs.
-        Where(v => v.SessionId == sessionId && v.Status == VLRStatus.IN_PREPERATION)
+        Where(v => v.SessionId == sessionId && v.Status == VLRStatus.IN_PREPERATION && v.SeatId == seatId)
         .FirstOrDefaultAsync();
 
         if (vlr == null)
@@ -85,5 +85,117 @@ public class VLRService : IVLRService
         await m_context.SaveChangesAsync();
 
         return ServiceResult<string>.Ok($"Dodeljen vlr uspesno");
+    }
+
+    public async Task<ServiceResult<ActiveVLR>> ProvideVLR(int sessionId, int seatId, int userId)
+    {
+        var sesija = await m_context.Sessions.FirstOrDefaultAsync(s=>s.Id == sessionId);
+
+        if (sesija == null)
+            return ServiceResult<ActiveVLR>.Error("Ne postoji sesija!");
+
+        if (sesija.Stanje != SessionState.ACTIVE)
+            return ServiceResult<ActiveVLR>.Error("Ova sesija nije aktivna i ne prihvata nove zahteve!");
+
+        var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.SeatId == seatId && v.Status == VLRStatus.READY);
+
+        if (vlr == null)
+            return ServiceResult<ActiveVLR>.Error("Ne postoji spreman VLR u toj sesisji!");
+
+        vlr.Status = VLRStatus.PROVIDED;
+        vlr.UserId = userId;
+
+        m_context.ActiveVLRs.Update(vlr);
+        await m_context.SaveChangesAsync();
+
+        return ServiceResult<ActiveVLR>.Ok(vlr);   
+    }
+
+    public async Task<ServiceResult<ActiveVLR>> ReleaseVLR(int sessionId, int userId)
+    {
+        var sesija = await m_context.Sessions.FirstOrDefaultAsync(s=>s.Id == sessionId);
+
+        if (sesija == null)
+            return ServiceResult<ActiveVLR>.Error("Ne postoji sesija!");
+
+        var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.UserId == userId);
+
+        if (vlr == null)
+            return ServiceResult<ActiveVLR>.Error("Ne postoji VLR sa taj userId u toj sesisji!");
+
+        if (sesija.Stanje == SessionState.FADING)
+        {
+            var aktivnaSesija = await m_context.Sessions.
+            FirstOrDefaultAsync(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.ACTIVE);
+            if (aktivnaSesija != null)
+            {
+                var preparedVlr = await m_context.ActiveVLRs
+                .FirstOrDefaultAsync(v => v.RoomId == vlr.RoomId && v.SeatId == vlr.SeatId && v.Status == VLRStatus.IN_PREPERATION);
+
+                if (preparedVlr != null)
+                {
+                    preparedVlr.Status = VLRStatus.READY;
+                    preparedVlr.IP = vlr.IP;
+                    m_context.ActiveVLRs.Update(preparedVlr);
+                }
+            }
+
+            vlr.IP = null;
+            vlr.SeatId = null;
+            vlr.RoomId = null;
+            vlr.UserId = null;
+            vlr.Status = VLRStatus.NULL;
+            m_context.ActiveVLRs.Update(vlr);
+        }
+        else
+        {        
+            vlr.Status = VLRStatus.RELEASED;
+            vlr.UserId = null;
+            m_context.ActiveVLRs.Update(vlr);
+        }
+
+        await m_context.SaveChangesAsync();
+
+        return ServiceResult<ActiveVLR>.Ok(vlr);           
+    }
+
+    public async Task<ServiceResult<string>> KillVLR(int sessionId, int seatId)
+    {
+        var sesija = await m_context.Sessions.FirstOrDefaultAsync(s=>s.Id == sessionId);
+
+        if (sesija == null)
+            return ServiceResult<string>.Error("Ne postoji sesija!");
+
+        var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.SeatId == seatId);
+        if (vlr == null)
+            return ServiceResult<string>.Error("Ne postoji vlr na taj seat");
+        
+
+        // TODO PREPRAVI DA LEPSE BUDE A NE COPYPASTE
+        var aktivnaSesija = await m_context.Sessions.
+        FirstOrDefaultAsync(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.ACTIVE);
+        if (aktivnaSesija != null)
+        {
+            var preparedVlr = await m_context.ActiveVLRs
+            .FirstOrDefaultAsync(v => v.RoomId == vlr.RoomId && v.SeatId == vlr.SeatId && v.Status == VLRStatus.IN_PREPERATION);
+
+            if (preparedVlr != null)
+            {
+                preparedVlr.Status = VLRStatus.READY;
+                preparedVlr.IP = vlr.IP;
+                m_context.ActiveVLRs.Update(preparedVlr);
+            }
+        }
+    
+        vlr.IP = null;
+        vlr.SeatId = null;
+        vlr.RoomId = null;
+        vlr.UserId = null;
+        vlr.Status = VLRStatus.NULL;
+
+        m_context.ActiveVLRs.Update(vlr);
+        await m_context.SaveChangesAsync();
+
+        return ServiceResult<string>.Ok("Uspesno ubiven vlr");
     }
 }

@@ -35,4 +35,9 @@ public class Session
     public required bool AutomatskiPocetak {get; set;}
     public required bool AutomatskiKraj {get; set;}
     public SessionState? AutomatskoStanjeZavrsavanja {get; set;}
+
+    public override string ToString()
+    {
+        return $"{Aktivnost.Name} {Prostorija.Naziv} {Stanje}";
+    }
 }

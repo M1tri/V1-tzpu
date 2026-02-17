@@ -30,8 +30,6 @@ public class TimeSchedulerService : BackgroundService
                         && s.Stanje == SessionState.PLANNED
                     )
             .ToListAsync();
-
-
         }
     }
 }

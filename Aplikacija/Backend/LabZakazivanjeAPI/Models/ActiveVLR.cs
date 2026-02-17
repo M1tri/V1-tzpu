@@ -9,7 +9,8 @@ public enum VLRStatus
     IN_PREPERATION = 1,
     READY = 2,
     RELEASED = 3,
-    NULL = 4
+    PROVIDED = 4,
+    NULL = 5
 }
 
 public class ActiveVLR
