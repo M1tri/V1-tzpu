@@ -1,4 +1,6 @@
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Services.Interfaces;
+using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
 using Microsoft.EntityFrameworkCore;
 
 public class TimeSchedulerService : BackgroundService
@@ -19,17 +21,51 @@ public class TimeSchedulerService : BackgroundService
             using var scope = m_scopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDBContext>();
 
+            var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
+
             var dan = DateOnly.FromDateTime(DateTime.Now);
             var vreme = TimeOnly.FromDateTime(DateTime.Now);
 
-            var sesijeZaNext = await context.Sessions
+            Console.WriteLine($"Proveravam za {dan} {vreme}");
+
+            var sve = await context.Sessions.ToListAsync(cancellationToken : stoppingToken);
+            foreach (var s in sve)
+            {
+                Console.WriteLine($"{s.Id} {s.Datum} {s.VremePocetka} {s.VremeKraja}");
+            }
+
+            var sesijeZaTerminate = await context.Sessions
+            .Where(s => s.AutomatskiKraj &&
+                        s.Datum == dan &&
+                        s.VremeKraja < vreme &&
+                        s.Stanje == SessionState.ACTIVE)
+            .ToListAsync(cancellationToken : stoppingToken);
+
+            foreach (var s in sesijeZaTerminate)
+            {
+                if (s.AutomatskoStanjeZavrsavanja == SessionState.FADING)
+                {
+                    await sessionService.Fade(s.Id);
+                }
+                else
+                {
+                    await sessionService.Terminate(s.Id);
+                }
+            }
+
+            var sesijeZaActive = await context.Sessions
             .Where(s => s.AutomatskiPocetak &&
                         s.Datum == dan && 
                         s.VremePocetka < vreme &&   
-                        s.VremeKraja > vreme
-                        && s.Stanje == SessionState.PLANNED
+                        s.VremeKraja > vreme && 
+                        s.Stanje == SessionState.NEXT
                     )
-            .ToListAsync();
+            .ToListAsync(cancellationToken: stoppingToken);
+
+            foreach (var s in sesijeZaActive)
+            {
+                await sessionService.Activate(s.Id);
+            }
         }
     }
 }

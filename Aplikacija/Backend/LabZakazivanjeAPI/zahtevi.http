@@ -51,12 +51,12 @@ Content-Type: application/json
 {
     "roomId": 8,
     "activityId": 11,
-    "datum": "2026-02-15",
-    "vremePocetka": "12:00:00",
-    "vremeKraja": "16:00:00",
+    "datum": "2026-02-18",
+    "vremePocetka": "20:30:00",
+    "vremeKraja": "20:32:00",
     "stanje": 0,
-    "automatskiPocetak": false,
-    "automatskiKraj": false,
+    "automatskiPocetak": true,
+    "automatskiKraj": true,
     "automatskoStanjeZavrsavanja": 4
 }
 
@@ -64,7 +64,7 @@ Content-Type: application/json
 
 ### VLRController
 
-@session = 19
+@session = 24
 
 ### Proglasi sesiju za next
 PUT {{baseUrl}}/api/vlr/PromoteAsNext?sessionId={{session}}
