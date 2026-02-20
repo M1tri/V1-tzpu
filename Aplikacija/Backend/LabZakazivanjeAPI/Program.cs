@@ -1,3 +1,5 @@
+using LabZakazivanjeAPI.Clients;
+using LabZakazivanjeAPI.Clients.Interfaces;
 using LabZakazivanjeAPI.Models;
 using LabZakazivanjeAPI.Services;
 using LabZakazivanjeAPI.Services.Interfaces;
@@ -17,6 +19,10 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IVLRService, VLRService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IRoomsService, RoomsService>();
+builder.Services.AddHttpClient<IInfrastructureClient, InfrastructureClient>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7213");
+});
 
 var app = builder.Build();
 

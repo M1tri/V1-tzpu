@@ -50,21 +50,20 @@ Content-Type: application/json
 
 {
     "roomId": 8,
-    "activityId": 11,
+    "aktivnostId": 11,
     "datum": "2026-02-18",
     "vremePocetka": "20:30:00",
     "vremeKraja": "20:32:00",
-    "stanje": 0,
     "automatskiPocetak": true,
     "automatskiKraj": true,
-    "automatskoStanjeZavrsavanja": 4
+    "automatskoKrajnjeStanje": 4
 }
 
 ###
 
 ### VLRController
 
-@session = 24
+@session = 31
 
 ### Proglasi sesiju za next
 PUT {{baseUrl}}/api/vlr/PromoteAsNext?sessionId={{session}}
@@ -86,9 +85,9 @@ Content-Type: application/json
 ###
 
 ### Provide nekom korisniku
-PUT {{baseUrl}}/api/vlr/Provide?sessionId=20&seatId=2&userId=1004
+PUT {{baseUrl}}/api/vlr/Provide?sessionId=31&seatId=4&userId=1002
 Content-Type: application/json
 
 ### Release od korisnika
-PUT {{baseUrl}}/api/vlr/Release?sessionId=19&userId=1002
+PUT {{baseUrl}}/api/vlr/Release?sessionId=31&userId=1002
 Content-Type: application/json

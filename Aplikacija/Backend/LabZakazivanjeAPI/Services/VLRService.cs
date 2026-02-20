@@ -1,16 +1,21 @@
+using LabZakazivanjeAPI.Clients;
+using LabZakazivanjeAPI.Clients.Interfaces;
 using LabZakazivanjeAPI.Models;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace LabZakazivanjeAPI.Services;
 
 public class VLRService : IVLRService
 {
-    private AppDBContext m_context;
+    private readonly AppDBContext m_context;
+    private readonly IInfrastructureClient m_infrastructureClient;
 
-    public VLRService(AppDBContext context)
+    public VLRService(AppDBContext context, IInfrastructureClient infrastructureClient)
     {
         m_context = context;
+        m_infrastructureClient = infrastructureClient;
     }
 
     public async Task<ServiceResult<string>> GenerateIdleVLRs(string VLRID, int sessionId, int roomId, int count)
@@ -22,9 +27,21 @@ public class VLRService : IVLRService
 
         for (int i = 0; i < count; i++)
         {
+            var response = await m_infrastructureClient.CloneVM(VLRID);
+
+            string vlrInstanceId;
+            if (response.Item1 == true)
+            {
+                vlrInstanceId = response.Item2;
+            }
+            else
+            {
+                return ServiceResult<string>.Error("Greska u infrastrukturi pri kloniranju!");
+            }
+
             ActiveVLR vlrInstance = new ActiveVLR
             {
-                VLRID = VLRID,
+                VLRID = vlrInstanceId,
                 SesijaVlasnik = session,
                 RoomId = roomId,
                 Status = VLRStatus.GENERATED_IDLE,
@@ -46,7 +63,6 @@ public class VLRService : IVLRService
         if (sesija == null)
             return ServiceResult<string>.Error("Ne postoji sesija s id");
 
-        // prvi u slobodan dodeljuje se na taj seatId   
         var vlr = await m_context.ActiveVLRs.
         Where(v => v.SessionId == sessionId && v.Status == VLRStatus.GENERATED_IDLE)
         .FirstOrDefaultAsync();
@@ -54,6 +70,11 @@ public class VLRService : IVLRService
         if (vlr == null)
             return ServiceResult<string>.Error("Ne postoji slobodan VLR za taj seat");
         
+        var infrastructureResponse = await m_infrastructureClient.PrepareVM(vlr.VLRID, sesija.RoomId, seatId);
+
+        if (!infrastructureResponse)
+            return ServiceResult<string>.Error("Greska u infrastrukturi pri prripremi resursa");
+
         vlr.SeatId = seatId;
         vlr.Status = VLRStatus.IN_PREPERATION;
 
@@ -70,7 +91,6 @@ public class VLRService : IVLRService
         if (sesija == null)
             return ServiceResult<string>.Error("Ne postoji sesija s id");
 
-        // prvi koji je u pripremi
         var vlr = await m_context.ActiveVLRs.
         Where(v => v.SessionId == sessionId && v.Status == VLRStatus.IN_PREPERATION && v.SeatId == seatId)
         .FirstOrDefaultAsync();
@@ -78,6 +98,11 @@ public class VLRService : IVLRService
         if (vlr == null)
             return ServiceResult<string>.Error("Ne postoji VLR u pripremi za taj seat");
         
+        bool infrastructureRespone = await m_infrastructureClient.SetVMIp(vlr.VLRID, sesija.RoomId, seatId, ip);
+
+        if (!infrastructureRespone)
+            return ServiceResult<string>.Error("Greska u infrastrukturi");
+
         vlr.Status = VLRStatus.READY;
         vlr.IP = ip;
 

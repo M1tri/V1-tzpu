@@ -1,4 +1,5 @@
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Models.DTOs;
 using LabZakazivanjeAPI.Services;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -34,7 +35,7 @@ public class SessionController : ControllerBase
     }
 
     [HttpPost("AddSession")]
-    public async Task<ActionResult<Session>> AddSession([FromBody] Session s)
+    public async Task<ActionResult<Session>> AddSession([FromBody] CreateSessionDTO s)
     {
         var session = await m_sessionService.AddSession(s);
 

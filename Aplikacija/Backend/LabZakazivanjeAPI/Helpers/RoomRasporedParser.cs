@@ -6,6 +6,40 @@ public class RoomRasporedParser
 {
     public record Seat(int? Id, string? IP);
 
+    public static List<int> GetSeatIds(string raspored)
+    {
+        List<int> seatIds = [];
+        var seats = ParseRaspored(raspored);
+
+        foreach (var row in seats)
+        {
+            foreach (var s in row)
+            {
+                if (s.Id != null)
+                    seatIds.Add(s.Id.Value);
+            }
+        }
+
+        return seatIds;
+    }
+
+    public static List<Seat> GetSeatIps(string raspored)
+    {
+        List<Seat> seatIds = [];
+        var seats = ParseRaspored(raspored);
+
+        foreach (var row in seats)
+        {
+            foreach (var s in row)
+            {
+                if (s.Id != null && s.IP != null)
+                    seatIds.Add(new Seat(s.Id, s.IP));
+            }
+        }
+
+        return seatIds;
+    }
+
     public static List<List<Seat>> ParseRaspored(string raspored)
     {
         // ((id:ip, id:ip), (id:ip, id:ip, id:ip), (id:ip),)

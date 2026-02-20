@@ -1,6 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
 using LabZakazivanjeAPI.Helpers;
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Models.DTOs;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,24 +18,68 @@ public class SessionService : ISessionService
         m_vlrService = vlrService;
     }
 
-    public async Task<ServiceResult<IEnumerable<Session>>> GetSessions()
+    public async Task<ServiceResult<IEnumerable<ViewSessionDTO>>> GetSessions()
     {
-        var sessions = await m_context.Sessions.ToListAsync();
-        return ServiceResult<IEnumerable<Session>>.Ok(sessions);
+        var sessions = await m_context.Sessions
+        .Include(s => s.Prostorija)
+        .Include(s => s.Aktivnost)
+        .ToListAsync();
+
+        List<ViewSessionDTO> sessionViews = [];
+
+        foreach (var s in sessions)
+        {
+            sessionViews.Add(new ViewSessionDTO
+            {
+                Id = s.Id,
+                NazivProstorije = s.Prostorija!.Naziv,
+                NazivAktivnosti = s.Aktivnost!.Name,
+                Datum = s.Datum,
+                VremePocetka = s.VremeKraja,
+                VremeKraja = s.VremeKraja
+            });
+        }
+
+        return ServiceResult<IEnumerable<ViewSessionDTO>>.Ok(sessionViews);
     }
 
-    public async Task<ServiceResult<Session>> AddSession(Session s)
+    public async Task<ServiceResult<IEnumerable<ViewSessionDTO>>> GetSessionsInRoom(int roomId)
+    {
+        var sessions = await m_context.Sessions
+        .Where(s => s.RoomId == roomId)
+        .Include(s => s.Prostorija)
+        .Include(s => s.Aktivnost)
+        .ToListAsync();
+        List<ViewSessionDTO> sessionViews = [];
+
+        foreach (var s in sessions)
+        {
+            sessionViews.Add(new ViewSessionDTO
+            {
+                Id = s.Id,
+                NazivProstorije = s.Prostorija!.Naziv,
+                NazivAktivnosti = s.Aktivnost!.Name,
+                Datum = s.Datum,
+                VremePocetka = s.VremeKraja,
+                VremeKraja = s.VremeKraja
+            });
+        }
+
+        return ServiceResult<IEnumerable<ViewSessionDTO>>.Ok(sessionViews);        
+    }
+
+    public async Task<ServiceResult<ViewSessionDTO>> AddSession(CreateSessionDTO s)
     {   
         var room = await m_context.Rooms.Where(r => r.Id == s.RoomId).FirstOrDefaultAsync();
         if (room == null)
         {
-            return ServiceResult<Session>.Error("Nepostojeca soba");
+            return ServiceResult<ViewSessionDTO>.Error("Nepostojeca soba");
         }
 
-        var activity = await m_context.Activities.Where(a => a.Id == s.ActivityId).FirstOrDefaultAsync();
+        var activity = await m_context.Activities.Where(a => a.Id == s.AktivnostId).FirstOrDefaultAsync();
         if (activity == null)
         {
-            return ServiceResult<Session>.Error("Nepostojeća aktivnost!");
+            return ServiceResult<ViewSessionDTO>.Error("Nepostojeća aktivnost!");
         }
 
         Session sesija = new Session
@@ -46,36 +91,41 @@ public class SessionService : ISessionService
             VremeKraja = s.VremeKraja,
             AutomatskiPocetak = s.AutomatskiPocetak,
             AutomatskiKraj = s.AutomatskiKraj,
-            AutomatskoStanjeZavrsavanja = s.AutomatskoStanjeZavrsavanja,
+            AutomatskoStanjeZavrsavanja = s.AutomatskoKrajnjeStanje,
             Stanje = SessionState.PLANNED,
         };
 
         await m_context.Sessions.AddAsync(sesija);
         await m_context.SaveChangesAsync();
 
-        return ServiceResult<Session>.Ok(sesija);
+        ViewSessionDTO view = new()
+        {
+            Id = sesija.Id,
+            NazivProstorije = sesija.Prostorija.Naziv,
+            NazivAktivnosti = sesija.Aktivnost.Name,
+            Datum = sesija.Datum,
+            VremePocetka = sesija.VremePocetka,
+            VremeKraja = sesija.VremeKraja
+        };
+
+        return ServiceResult<ViewSessionDTO>.Ok(view);
     }
 
-    public async Task<ServiceResult<Dictionary<int, VLRStatus?>>> GetSessionResourceStatus(int sessionId)
+    public async Task<ServiceResult<Dictionary<int, VLRStatus>>> GetSessionResourceStatus(int sessionId)
     {
-        Dictionary<int, VLRStatus?> result = [];
+        Dictionary<int, VLRStatus> result = [];
 
         var sesija = await m_context.Sessions
         .Include(s => s.Prostorija)
         .FirstOrDefaultAsync(s => s.Id == sessionId);
 
         if (sesija == null)
-            return ServiceResult<Dictionary<int, VLRStatus?>>.Error("Ne postoji sesija!");
+            return ServiceResult<Dictionary<int, VLRStatus>>.Error("Ne postoji sesija!");
 
-        var raspored = RoomRasporedParser.ParseRaspored(sesija.Prostorija!.Raspored);
-
-        foreach (var row in raspored)
+        var seatIds = RoomRasporedParser.GetSeatIds(sesija.Prostorija!.Raspored);
+        foreach (int seat in seatIds)
         {
-            foreach (var seat in row)
-            {
-                if (seat.Id != null && seat.IP != null)
-                    result.Add(seat.Id!.Value, null);
-            }
+            result.Add(seat, VLRStatus.NULL);
         }
 
         var vlrStatuses = await m_context.ActiveVLRs
@@ -88,7 +138,7 @@ public class SessionService : ISessionService
             result[v.SeatId!.Value] = v.Status;
         }
 
-        return ServiceResult<Dictionary<int, VLRStatus?>>.Ok(result);
+        return ServiceResult<Dictionary<int, VLRStatus>>.Ok(result);
     }
 
     public async Task<ServiceResult<string>> PromoteAsNext(int sessionId)
@@ -140,8 +190,6 @@ public class SessionService : ISessionService
         .Include(s => s.Aktivnost)
         .FirstOrDefaultAsync(s => s.Id == sessionId);
 
-        Console.WriteLine(sesija);
-
         if (sesija == null)
             return ServiceResult<string>.Error("Ne postoji sesija sa tim ID-em");
         
@@ -155,7 +203,7 @@ public class SessionService : ISessionService
         }
 
         var result = await GetSessionResourceStatus(sesija.Id);
-        Dictionary<int, VLRStatus?> seatStatuses;
+        Dictionary<int, VLRStatus> seatStatuses;
         if (result.Success)
         {
             seatStatuses = result.Data!;
@@ -165,7 +213,6 @@ public class SessionService : ISessionService
             return ServiceResult<string>.Error("Greska pri nabavljanju statsua mesta");
         }
 
-        // prvo se svima dodeli seatId i oznace da se spremaju, ali jos nemaju IP
         foreach (var seatId in seatStatuses.Keys)
         {
             var res = await m_vlrService.PrepareVLR(sesija.Id, seatId);
@@ -176,41 +223,30 @@ public class SessionService : ISessionService
         var fadingSession = await m_context.Sessions
         .FirstOrDefaultAsync(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.FADING);
 
-        // TODO metoda koja vraca prikladniju strukturu
-        var seatIps = RoomRasporedParser.ParseRaspored(sesija.Prostorija!.Raspored);
+        var seatIps = RoomRasporedParser.GetSeatIps(sesija.Prostorija!.Raspored);
 
         if (fadingSession == null)
         {
-            foreach (var row in seatIps)
+            foreach (var seat in seatIps)
             {
-                foreach (var seat in row)
-                {
-                    if (seat.Id != null && seat.IP != null)
-                        await m_vlrService.ReadyVLR(sessionId, seat.Id.Value, seat.IP);
-                }
+                await m_vlrService.ReadyVLR(sessionId, seat.Id!.Value, seat.IP!);
             }
         }
         else
         {
             result = await GetSessionResourceStatus(fadingSession.Id);
-            Dictionary<int, VLRStatus?> fadingSeasonSetIps;
+            Dictionary<int, VLRStatus> fadingSeasonSetIps;
 
             if(result.Success)
                 fadingSeasonSetIps = result.Data!;
             else
                 return ServiceResult<string>.Error("Greska pri nabavljanju statsua mesta");
 
-            foreach (var row in seatIps)
+            foreach (var seat in seatIps)
             {
-                foreach (var seat in row)
-                {
-                    if (seat.Id != null && seat.IP != null)
-                    {
-                        if (fadingSeasonSetIps.TryGetValue(seat.Id.Value, out VLRStatus? value) && value != null && value.Value == VLRStatus.PROVIDED)
-                            continue;
-                        await m_vlrService.ReadyVLR(sessionId, seat.Id.Value, seat.IP);
-                    }
-                }
+                if (fadingSeasonSetIps.TryGetValue(seat.Id!.Value, out VLRStatus value) && value == VLRStatus.PROVIDED)
+                    continue;
+                await m_vlrService.ReadyVLR(sessionId, seat.Id.Value, seat.IP!);
             }
         }
         
