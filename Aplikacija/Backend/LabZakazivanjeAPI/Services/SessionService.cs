@@ -119,16 +119,16 @@ public class SessionService : ISessionService
         return ServiceResult<ViewSessionDTO>.Ok(view);
     }
 
-    public async Task<ServiceResult<Dictionary<int, VLRStatus>>> GetSessionResourceStatus(int sessionId)
+    public async Task<ServiceResult<Dictionary<int, string>>> GetSessionResourceStatus(int sessionId)
     {
-        Dictionary<int, VLRStatus> result = [];
+        Dictionary<int, string> result = [];
 
         var sesija = await m_context.Sessions
         .Include(s => s.Prostorija)
         .FirstOrDefaultAsync(s => s.Id == sessionId);
 
         if (sesija == null)
-            return ServiceResult<Dictionary<int, VLRStatus>>.Error("Ne postoji sesija!");
+            return ServiceResult<Dictionary<int, string>>.Error("Ne postoji sesija!");
 
         var seatIds = RoomRasporedParser.GetSeatIds(sesija.Prostorija!.Raspored);
         foreach (int seat in seatIds)
@@ -146,7 +146,7 @@ public class SessionService : ISessionService
             result[v.SeatId!.Value] = v.Status;
         }
 
-        return ServiceResult<Dictionary<int, VLRStatus>>.Ok(result);
+        return ServiceResult<Dictionary<int, string>>.Ok(result);
     }
 
     public async Task<ServiceResult<string>> PromoteAsNext(int sessionId)
@@ -211,7 +211,7 @@ public class SessionService : ISessionService
         }
 
         var result = await GetSessionResourceStatus(sesija.Id);
-        Dictionary<int, VLRStatus> seatStatuses;
+        Dictionary<int, string> seatStatuses;
         if (result.Success)
         {
             seatStatuses = result.Data!;
@@ -243,7 +243,7 @@ public class SessionService : ISessionService
         else
         {
             result = await GetSessionResourceStatus(fadingSession.Id);
-            Dictionary<int, VLRStatus> fadingSeasonSetIps;
+            Dictionary<int, string> fadingSeasonSetIps;
 
             if(result.Success)
                 fadingSeasonSetIps = result.Data!;
@@ -252,7 +252,7 @@ public class SessionService : ISessionService
 
             foreach (var seat in seatIps)
             {
-                if (fadingSeasonSetIps.TryGetValue(seat.Id!.Value, out VLRStatus value) && value == VLRStatus.PROVIDED)
+                if (fadingSeasonSetIps.TryGetValue(seat.Id!.Value, out string? value) && value == VLRStatus.PROVIDED)
                     continue;
                 await m_vlrService.ReadyVLR(sessionId, seat.Id.Value, seat.IP!);
             }

@@ -10,6 +10,7 @@ public class InfrastructureController : ControllerBase
     public async Task<ActionResult<string>> CloneVM([FromQuery] string template)
     {
         var random = Guid.NewGuid().ToString("N").Substring(8);
+        await Task.Delay(5);
         return Ok($"{template}-{random}");
     }
 

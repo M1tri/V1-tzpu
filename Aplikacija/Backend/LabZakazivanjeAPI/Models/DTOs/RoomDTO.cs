@@ -1,8 +1,6 @@
 namespace LabZakazivanjeAPI.Models.DTOs;
 
 using LabZakazivanjeAPI.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing.Constraints;
 
 public class CreateRoomDTO
 {

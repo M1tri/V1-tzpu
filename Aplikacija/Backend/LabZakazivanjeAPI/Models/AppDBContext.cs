@@ -9,6 +9,7 @@ public class AppDBContext : DbContext
     public DbSet<Session> Sessions {get; set;}
     public DbSet<ActiveVLR> ActiveVLRs {get; set;}
     public DbSet<ActivityClass> ActivityClasses {get; set;}
+    public DbSet<VLRStatusInfo> VLRStatusInfos {get; set;}
 
     public AppDBContext(DbContextOptions<AppDBContext> options)
         : base(options)

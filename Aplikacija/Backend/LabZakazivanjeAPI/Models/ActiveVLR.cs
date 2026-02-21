@@ -3,14 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LabZakazivanjeAPI.Models;
 
-public enum VLRStatus
+public static class VLRStatus
 {
-    GENERATED_IDLE = 0,
-    IN_PREPERATION = 1,
-    READY = 2,
-    RELEASED = 3,
-    PROVIDED = 4,
-    NULL = 5
+    public static readonly string GENERATED_IDLE = "generated_idle";
+    public static readonly string IN_PREPERATION = "in_preparation";
+    public static readonly string READY = "ready";
+    public static readonly string RELEASED = "released";
+    public static readonly string PROVIDED = "provided";
+    public static readonly string NULL = "null";
 }
 
 public class ActiveVLR
@@ -22,13 +22,11 @@ public class ActiveVLR
 
     [ForeignKey(nameof(SessionId))]
     public Session? SesijaVlasnik {get; set;}
-
     public required string VLRID {get; set;}
-
     public string? IP {get; set;}
     public int? RoomId {get; set;}
     public int? SeatId {get; set;}
     public int? UserId {get; set;}
     public required DateTime LastStatusChange {get; set;}
-    public required VLRStatus Status {get; set;}
+    public required string Status {get; set;}
 }

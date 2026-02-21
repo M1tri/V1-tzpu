@@ -1,7 +1,9 @@
 using LabZakazivanjeAPI.Clients;
 using LabZakazivanjeAPI.Clients.Interfaces;
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Models.DTOs;
 using LabZakazivanjeAPI.Services.Interfaces;
+using Microsoft.AspNetCore.StaticAssets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -77,6 +79,7 @@ public class VLRService : IVLRService
 
         vlr.SeatId = seatId;
         vlr.Status = VLRStatus.IN_PREPERATION;
+        vlr.LastStatusChange = DateTime.Now;
 
         m_context.ActiveVLRs.Update(vlr);
         await m_context.SaveChangesAsync();
@@ -105,6 +108,7 @@ public class VLRService : IVLRService
 
         vlr.Status = VLRStatus.READY;
         vlr.IP = ip;
+        vlr.LastStatusChange = DateTime.Now;
 
         m_context.ActiveVLRs.Update(vlr);
         await m_context.SaveChangesAsync();
@@ -129,6 +133,7 @@ public class VLRService : IVLRService
 
         vlr.Status = VLRStatus.PROVIDED;
         vlr.UserId = userId;
+        vlr.LastStatusChange = DateTime.Now;
 
         m_context.ActiveVLRs.Update(vlr);
         await m_context.SaveChangesAsync();
@@ -161,6 +166,7 @@ public class VLRService : IVLRService
                 {
                     preparedVlr.Status = VLRStatus.READY;
                     preparedVlr.IP = vlr.IP;
+                    preparedVlr.LastStatusChange = DateTime.Now;
                     m_context.ActiveVLRs.Update(preparedVlr);
                 }
             }
@@ -170,11 +176,13 @@ public class VLRService : IVLRService
             vlr.RoomId = null;
             vlr.UserId = null;
             vlr.Status = VLRStatus.NULL;
+            vlr.LastStatusChange = DateTime.Now;
             m_context.ActiveVLRs.Update(vlr);
         }
         else
         {        
             vlr.Status = VLRStatus.RELEASED;
+            vlr.LastStatusChange = DateTime.Now;
             vlr.UserId = null;
             m_context.ActiveVLRs.Update(vlr);
         }
@@ -207,6 +215,7 @@ public class VLRService : IVLRService
             if (preparedVlr != null)
             {
                 preparedVlr.Status = VLRStatus.READY;
+                preparedVlr.LastStatusChange = DateTime.Now;
                 preparedVlr.IP = vlr.IP;
                 m_context.ActiveVLRs.Update(preparedVlr);
             }
@@ -217,10 +226,46 @@ public class VLRService : IVLRService
         vlr.RoomId = null;
         vlr.UserId = null;
         vlr.Status = VLRStatus.NULL;
+        vlr.LastStatusChange = DateTime.Now;
 
         m_context.ActiveVLRs.Update(vlr);
         await m_context.SaveChangesAsync();
 
         return ServiceResult<string>.Ok("Uspesno ubiven vlr");
+    }
+
+    public async Task<ServiceResult<VLRStatusInfoDTO>> GetStatusInfo(string vlrStatus)
+    {
+        var statusInfo = await m_context.VLRStatusInfos.FirstOrDefaultAsync(s => s.Naziv == vlrStatus);
+
+        if (statusInfo == null)
+            return ServiceResult<VLRStatusInfoDTO>.Error("Nepoznat status!");
+        
+        return ServiceResult<VLRStatusInfoDTO>.Ok(new VLRStatusInfoDTO
+        {
+            Naziv = statusInfo.Naziv,
+            Symbol = statusInfo.Symbol,
+            Color = statusInfo.Color
+        });
+    }
+
+    public async Task<ServiceResult<VLRStatusInfoDTO>> AddStatus(string statusName, string symbol, string color)
+    {
+        var statusInfo = new VLRStatusInfo
+        {
+            Naziv = statusName,
+            Symbol = symbol,
+            Color = color
+        };
+
+        await m_context.VLRStatusInfos.AddAsync(statusInfo);
+        await m_context.SaveChangesAsync();
+
+        return ServiceResult<VLRStatusInfoDTO>.Ok(new VLRStatusInfoDTO 
+        {
+            Naziv = statusInfo.Naziv,
+            Symbol = statusInfo.Symbol,
+            Color = statusInfo.Color
+        });
     }
 }
