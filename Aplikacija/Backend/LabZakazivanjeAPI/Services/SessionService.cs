@@ -35,8 +35,9 @@ public class SessionService : ISessionService
                 NazivProstorije = s.Prostorija!.Naziv,
                 NazivAktivnosti = s.Aktivnost!.Name,
                 Datum = s.Datum,
-                VremePocetka = s.VremeKraja,
-                VremeKraja = s.VremeKraja
+                VremePocetka = s.VremePocetka,
+                VremeKraja = s.VremeKraja,
+                Stanje = s.Stanje
             });
         }
 
@@ -60,8 +61,9 @@ public class SessionService : ISessionService
                 NazivProstorije = s.Prostorija!.Naziv,
                 NazivAktivnosti = s.Aktivnost!.Name,
                 Datum = s.Datum,
-                VremePocetka = s.VremeKraja,
-                VremeKraja = s.VremeKraja
+                VremePocetka = s.VremePocetka,
+                VremeKraja = s.VremeKraja,
+                Stanje = s.Stanje
             });
         }
 
@@ -105,7 +107,8 @@ public class SessionService : ISessionService
             NazivAktivnosti = sesija.Aktivnost.Name,
             Datum = sesija.Datum,
             VremePocetka = sesija.VremePocetka,
-            VremeKraja = sesija.VremeKraja
+            VremeKraja = sesija.VremeKraja,
+            Stanje = sesija.Stanje
         };
 
         return ServiceResult<ViewSessionDTO>.Ok(view);

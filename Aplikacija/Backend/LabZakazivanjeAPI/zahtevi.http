@@ -1,4 +1,4 @@
-@baseUrl = https://localhost:7213
+@baseUrl = http://localhost:5131
 
 
 ### ROOMS
@@ -32,7 +32,7 @@ Content-Type: application/json
 {
     "name" : "Programski prevodioci LV1",
     "vlrids" : [
-        "Eclipse"
+        "Jflex"
     ]
 }
 
@@ -44,18 +44,22 @@ Content-Type: application/json
 GET {{baseUrl}}/api/sessions/GetSessions
 Accept: application/json
 
+### vrati sesije u sobi
+GET {{baseUrl}}/api/sessions/GetSessionsInRoom?roomId=3
+Accept: application/json
+
 ### Dodaj sobu
 POST {{baseUrl}}/api/sessions/AddSession
 Content-Type: application/json
 
 {
-    "roomId": 8,
-    "aktivnostId": 11,
-    "datum": "2026-02-18",
-    "vremePocetka": "20:30:00",
-    "vremeKraja": "20:32:00",
-    "automatskiPocetak": true,
-    "automatskiKraj": true,
+    "roomId": 3,
+    "aktivnostId": 3,
+    "datum": "2026-03-20",
+    "vremePocetka": "15:00:00",
+    "vremeKraja": "20:30:00",
+    "automatskiPocetak": false,
+    "automatskiKraj": false,
     "automatskoKrajnjeStanje": 4
 }
 
@@ -63,7 +67,7 @@ Content-Type: application/json
 
 ### VLRController
 
-@session = 31
+@session = 2
 
 ### Proglasi sesiju za next
 PUT {{baseUrl}}/api/vlr/PromoteAsNext?sessionId={{session}}

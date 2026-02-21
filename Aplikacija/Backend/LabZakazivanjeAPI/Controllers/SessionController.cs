@@ -34,6 +34,21 @@ public class SessionController : ControllerBase
         }
     }
 
+    [HttpGet("GetSessionsInRoom")]
+    public async Task<ActionResult<IEnumerable<ViewSessionDTO>>> GetSessionsInRoom([FromQuery] int roomId)
+    {
+        var sessions = await m_sessionService.GetSessionsInRoom(roomId);
+
+        if (sessions.Success)
+        {
+            return Ok(sessions.Data);
+        }
+        else
+        {
+            return BadRequest(sessions.ErrorMessage);
+        }
+    }
+
     [HttpPost("AddSession")]
     public async Task<ActionResult<Session>> AddSession([FromBody] CreateSessionDTO s)
     {

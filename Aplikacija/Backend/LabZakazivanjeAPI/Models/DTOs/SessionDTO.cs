@@ -33,4 +33,5 @@ public class ViewSessionDTO
     public required DateOnly Datum {get; set;}
     public required TimeOnly VremePocetka {get; set;}
     public required TimeOnly VremeKraja {get; set;}
+    public required SessionState Stanje{get;set;}
 }

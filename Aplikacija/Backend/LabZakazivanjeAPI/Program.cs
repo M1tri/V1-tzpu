@@ -21,7 +21,29 @@ builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IRoomsService, RoomsService>();
 builder.Services.AddHttpClient<IInfrastructureClient, InfrastructureClient>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7213");
+    client.BaseAddress = new Uri("http://localhost:5131");
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactDevPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // React dev server
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
 });
 
 var app = builder.Build();
@@ -32,6 +54,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("ReactDevPolicy");
 
 app.MapControllers();
 app.Run();
