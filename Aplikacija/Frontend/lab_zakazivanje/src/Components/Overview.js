@@ -2,7 +2,7 @@ import Tanstack from "./Tanstack.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComputer, faPlus, faCalendarDays, faClockRotateLeft, faRectangleList } from "@fortawesome/free-solid-svg-icons";
 
-export default function Overview({ data, rooms, selectedRoom, handleRoomChange, setMode, newlyAddedId }) {
+export default function Overview({ data, rooms, selectedRoom, handleRoomChange, setMode, newlyAddedId, setNewlyAddedId }) {
 
     const sortedData = [...data].sort((a, b) => b.id - a.id);
 
@@ -54,6 +54,8 @@ export default function Overview({ data, rooms, selectedRoom, handleRoomChange, 
                     tableData={plannedData} 
                     naslov={<><FontAwesomeIcon icon={faCalendarDays} className="me-2" /> Planirane aktivnosti</>}
                     newlyAddedId={newlyAddedId} 
+                    setNewlyAddedId={setNewlyAddedId}
+                    onEditClicked={(id) => {alert(id)}}
                 />
                 <Tanstack 
                     tableData={finishedData} 

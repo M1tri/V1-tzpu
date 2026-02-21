@@ -11,14 +11,16 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
-export default function Tanstack({tableData, naslov, enableFeatures = true, newlyAddedId})
+export default function Tanstack({tableData, naslov, enableFeatures = true, newlyAddedId, setNewlyAddedId, onEditClicked})
 {
     const [pageIndex, setPageIndex] = useState(0);
     const [pageSize, setPageSize] = useState(3);
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState("");
 
-    const columns = useMemo(() => [
+    const columns = useMemo(() => {
+
+        const baseCols = [
         { 
             header: ({ column }) => (
                 <div>
@@ -120,9 +122,25 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
                     </div>
                 );
             }
+        }];
+
+        const hasPlanned = tableData.some(row => row.status === "planned");
+        if (hasPlanned) {
+            baseCols.push({
+                header: ({ column }) => <div>Edit</div>,
+                accessorKey: "edit",
+                cell: info => 
+                <button 
+                className="btn btn-sm btn-warning"
+                onClick={() => onEditClicked(info.row.original.id)}>
+                Edit
+                </button>,
+                enableSorting: false
+            });
         }
-        ],[]
-    );
+
+        return baseCols;
+    }, [tableData]);
 
     function parseDate(datum)
     {
@@ -212,8 +230,14 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
                 {table.getRowModel().rows.map(row => (
                     <tr 
                         key={row.id} 
-                        className={row.original.id === newlyAddedId ? "highlight-row" : ""}
-                        onClick = {() => row.toggleSelected()}>
+                        className={row.original.id === newlyAddedId ? "highlight-row shake-row" : ""}
+                        onClick={() => row.toggleSelected()}
+                        onAnimationEnd={() => {
+                            if (row.original.id === newlyAddedId) {
+                            setNewlyAddedId(null);
+                            }
+                        }}
+                    >
                         {row.getVisibleCells().map(cell => 
                         (
                             <td key={cell.id}>
@@ -264,7 +288,9 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
                 </div>
 
                 <div className="stranice">
-                    {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+                    {table.getPageCount() === 0 
+                    ? "0 / 0" 
+                    : `${table.getState().pagination.pageIndex + 1} / ${table.getPageCount()}`}
                 </div>
             </div> )}
         </div>

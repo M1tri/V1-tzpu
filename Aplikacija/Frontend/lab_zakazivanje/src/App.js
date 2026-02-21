@@ -220,6 +220,7 @@ function App() {
                         handleRoomChange={handleRoomChange}
                         setMode={setMode}
                         newlyAddedId={newlyAddedId}
+                        setNewlyAddedId={setNewlyAddedId}
                     />
                 ) : (
                     <Form 
