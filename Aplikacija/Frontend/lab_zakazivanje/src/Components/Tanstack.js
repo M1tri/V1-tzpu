@@ -11,7 +11,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
-export default function Tanstack({tableData, naslov, enableFeatures = true})
+export default function Tanstack({tableData, naslov, enableFeatures = true, newlyAddedId})
 {
     const [pageIndex, setPageIndex] = useState(0);
     const [pageSize, setPageSize] = useState(3);
@@ -210,17 +210,19 @@ export default function Tanstack({tableData, naslov, enableFeatures = true})
 
                 <tbody>
                 {table.getRowModel().rows.map(row => (
-                    <tr key={row.id} 
-                    onClick = {() => row.toggleSelected()}>
-                    {row.getVisibleCells().map(cell => 
-                    (
-                        <td key={cell.id}>
-                        {flexRender(
-                            cell.column.columnDef.cell ?? cell.column.columnDef.accessorKey,
-                            cell.getContext()
-                        )}
-                        </td>
-                    ))}
+                    <tr 
+                        key={row.id} 
+                        className={row.original.id === newlyAddedId ? "highlight-row" : ""}
+                        onClick = {() => row.toggleSelected()}>
+                        {row.getVisibleCells().map(cell => 
+                        (
+                            <td key={cell.id}>
+                            {flexRender(
+                                cell.column.columnDef.cell ?? cell.column.columnDef.accessorKey,
+                                cell.getContext()
+                            )}
+                            </td>
+                        ))}
                     </tr>
                 ))}
                 </tbody>

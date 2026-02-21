@@ -1,9 +1,10 @@
 import './App.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, act } from 'react';
 import { SessionView } from './DTOs/session.js';
 import { RoomView } from './DTOs/room.js';
 import Overview from './Components/Overview.js';
 import Form from './Components/Form.js';
+import { ActivityView } from './DTOs/activity.js';
 
 function App() {
     const [data, setData] = useState([]);
@@ -11,7 +12,10 @@ function App() {
     const [rooms, setRooms] = useState([]);
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [roomsLoading, setRoomsLoading] = useState(true);
+    const [activities, setActivities] = useState([]);
+    const [activitiesLoading, setActivitiesLoading] = useState(true);
     const [mode, setMode] = useState("list"); 
+    const [newlyAddedId, setNewlyAddedId] = useState(null);
 
     useEffect(() => {
         async function fetchRooms() {
@@ -76,14 +80,50 @@ function App() {
         fetchData();
     }, [selectedRoom]);
 
-    const handleRoomChange = (roomId) => {
+    useEffect(() => {
+        async function fetchActivities() {
+            try {
+                const res = await fetch("http://localhost:5131/api/activities/GetActivities");
+                if (!res.ok) 
+                    throw new Error("Greska pri ucitavanju aktivnosti");
+
+                const json = await res.json();
+
+                const loadedActivities = json.map(a => new ActivityView(a.id, a.naziv, a.tip, a.vlriDs));
+
+                setActivities(loadedActivities);
+
+            } 
+            catch (err) 
+            {
+                console.error(err);
+            } 
+            finally 
+            {
+                setActivitiesLoading(false);
+            }
+        }
+
+        fetchActivities();
+    }, []);
+
+    const handleRoomChange = (roomId) => 
+    {
         setSelectedRoom(Number(roomId));
         setData([]);
         setLoading(true);
     };
 
+    const handleSessionAdded = (session) =>
+    {
+        setData(prev => [...prev, session]);
+        setNewlyAddedId(session.id);
+    }
+
     if (roomsLoading) return <div>Učitavanje prostorija...</div>;
-    if (loading) return <div>Učitavanje aktivnosti...</div>;
+    if (loading) return <div>Učitavanje sesija...</div>;
+
+    console.log(activities);
   
     /*const data = [
         {
@@ -179,11 +219,15 @@ function App() {
                         selectedRoom={selectedRoom}
                         handleRoomChange={handleRoomChange}
                         setMode={setMode}
+                        newlyAddedId={newlyAddedId}
                     />
                 ) : (
                     <Form 
                         setMode={setMode}
-                        roomName={rooms.find(r => r.id === selectedRoom)?.naziv}
+                        room={rooms.find(r => r.id === selectedRoom)}
+                        rooms = {rooms}
+                        activities={activities}
+                        onSessionAdded={handleSessionAdded}
                     />
                 )}
             </div>

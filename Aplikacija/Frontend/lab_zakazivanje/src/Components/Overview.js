@@ -2,10 +2,12 @@ import Tanstack from "./Tanstack.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComputer, faPlus, faCalendarDays, faClockRotateLeft, faRectangleList } from "@fortawesome/free-solid-svg-icons";
 
-export default function Overview({ data, rooms, selectedRoom, handleRoomChange, setMode }) {
+export default function Overview({ data, rooms, selectedRoom, handleRoomChange, setMode, newlyAddedId }) {
 
-    const plannedData = data.filter(x => x.status === "planned");
-    const finishedData = data.filter(x => x.status === "finished");
+    const sortedData = [...data].sort((a, b) => b.id - a.id);
+
+    const plannedData = sortedData.filter(x => x.status === "planned");
+    const finishedData = sortedData.filter(x => x.status === "finished");
 
     return (
         <div className='mainAktivnosti'>
@@ -34,7 +36,7 @@ export default function Overview({ data, rooms, selectedRoom, handleRoomChange, 
                 </div>
 
                 <Tanstack
-                    tableData={data}
+                    tableData={finishedData}
                     naslov={<><FontAwesomeIcon icon={faRectangleList} className="me-2" /> Pregled trenutnih aktivnosti</>}
                     enableFeatures={false}
                 />
@@ -48,8 +50,15 @@ export default function Overview({ data, rooms, selectedRoom, handleRoomChange, 
             </div>
 
             <div className='aktivnostiRight'>
-                <Tanstack tableData={plannedData} naslov={<><FontAwesomeIcon icon={faCalendarDays} className="me-2" /> Planirane aktivnosti</>} />
-                <Tanstack tableData={finishedData} naslov={<><FontAwesomeIcon icon={faClockRotateLeft} className="me-2" /> Istorija aktivnosti</>} />
+                <Tanstack 
+                    tableData={plannedData} 
+                    naslov={<><FontAwesomeIcon icon={faCalendarDays} className="me-2" /> Planirane aktivnosti</>}
+                    newlyAddedId={newlyAddedId} 
+                />
+                <Tanstack 
+                    tableData={finishedData} 
+                    naslov={<><FontAwesomeIcon icon={faClockRotateLeft} className="me-2" /> Istorija aktivnosti</>} 
+                />
             </div>
         </div>
     );
