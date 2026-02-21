@@ -1,17 +1,17 @@
 import './App.css';
-import Tanstack from './Components/Tanstack.js';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComputer, faClockRotateLeft, faCalendarDays, faRectangleList } from '@fortawesome/free-solid-svg-icons';
 import React, { useState, useEffect } from 'react';
 import { SessionView } from './DTOs/session.js';
 import { RoomView } from './DTOs/room.js';
+import Overview from './Components/Overview.js';
+import Form from './Components/Form.js';
 
 function App() {
     const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [rooms, setRooms] = useState([]);
     const [selectedRoom, setSelectedRoom] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [roomsLoading, setRoomsLoading] = useState(true);
+    const [mode, setMode] = useState("list"); 
 
     useEffect(() => {
         async function fetchRooms() {
@@ -58,7 +58,7 @@ function App() {
             const json = await response.json();
             console.log(json);
 
-            const data = json.map(s => new SessionView(s.id, s.nazivAktivnosti, s.nazivAktivnosti, s.datum, s.vremePocetka, s.vremeKraja, s.stanje));
+            const data = json.map(s => new SessionView(s.id, s.nazivAktivnosti, s.tipAktivnosti, s.datum, s.vremePocetka, s.vremeKraja, s.stanje));
 
             console.log(data);
             setData(data);
@@ -77,16 +77,13 @@ function App() {
     }, [selectedRoom]);
 
     const handleRoomChange = (roomId) => {
-        setSelectedRoom(roomId);
+        setSelectedRoom(Number(roomId));
         setData([]);
         setLoading(true);
     };
 
     if (roomsLoading) return <div>Učitavanje prostorija...</div>;
     if (loading) return <div>Učitavanje aktivnosti...</div>;
-
-    const plannedData = data.filter(session => session.status === "planned");
-    const finishedData = data.filter(session => session.status === "finished");
   
     /*const data = [
         {
@@ -175,41 +172,22 @@ function App() {
         <div className="oglasnaTabla">
         <div className="oglasnaTabla-header"></div>
         <div className="oglasnaTabla-paper">
-            <div className='mainAktivnosti'>
-                <div className='aktivnostiLeft'>
-                    <h1>Zakazivanje laboratorijskih vežbi</h1>
-                    <div className="room-select-container">
-                        <label htmlFor="roomSelect" className="form-label fw-bold me-2">
-                            <FontAwesomeIcon icon={faComputer} className="me-2" /> Izaberite prostoriju:
-                        </label>
-                        <select
-                            id="roomSelect"
-                            className="form-select"
-                            value={selectedRoom || ""}
-                            onChange={(e) => handleRoomChange(e.target.value)}
-                        >
-                            {rooms.map((room) => (
-                            <option key={room.id} value={room.id}>
-                                {room.naziv}
-                            </option>
-                            ))}
-                        </select>
-                        </div>
-                    <div>
-                        <Tanstack tableData={data} naslov={<><FontAwesomeIcon icon={faRectangleList} className="me-2" /> Pregled aktivnosti</>} enableFeatures = {false}/>
-                    </div>
-                </div>
-                <div className='aktivnostiRight'>
-                    <div>
-                        <Tanstack tableData={data} naslov={<><FontAwesomeIcon icon={faCalendarDays} className="me-2" /> Planirane aktivnosti</>}/>
-                    </div>
-                    <div>
-                        <Tanstack tableData={data} naslov={<><FontAwesomeIcon icon={faClockRotateLeft} className="me-2" /> Istorija aktivnosti</>}/>
-                    </div>
-                </div>
+                {mode === "list" ? (
+                    <Overview 
+                        data={data}
+                        rooms={rooms}
+                        selectedRoom={selectedRoom}
+                        handleRoomChange={handleRoomChange}
+                        setMode={setMode}
+                    />
+                ) : (
+                    <Form 
+                        setMode={setMode}
+                        roomName={rooms.find(r => r.id === selectedRoom)?.naziv}
+                    />
+                )}
             </div>
         </div>
-    </div>
     );
 }
 

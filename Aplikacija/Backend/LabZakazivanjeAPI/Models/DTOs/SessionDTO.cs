@@ -30,6 +30,7 @@ public class ViewSessionDTO
     public int Id {get; set;}
     public required string NazivProstorije {get; set;}
     public required string NazivAktivnosti {get; set;}
+    public required string TipAktivnosti {get;set;}
     public required DateOnly Datum {get; set;}
     public required TimeOnly VremePocetka {get; set;}
     public required TimeOnly VremeKraja {get; set;}

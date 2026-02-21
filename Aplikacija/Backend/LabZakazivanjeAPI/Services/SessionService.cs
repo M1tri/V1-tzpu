@@ -23,6 +23,7 @@ public class SessionService : ISessionService
         var sessions = await m_context.Sessions
         .Include(s => s.Prostorija)
         .Include(s => s.Aktivnost)
+        .ThenInclude(a => a!.Tip)
         .ToListAsync();
 
         List<ViewSessionDTO> sessionViews = [];
@@ -34,6 +35,7 @@ public class SessionService : ISessionService
                 Id = s.Id,
                 NazivProstorije = s.Prostorija!.Naziv,
                 NazivAktivnosti = s.Aktivnost!.Name,
+                TipAktivnosti = s.Aktivnost!.Tip!.Naziv,
                 Datum = s.Datum,
                 VremePocetka = s.VremePocetka,
                 VremeKraja = s.VremeKraja,
@@ -50,6 +52,7 @@ public class SessionService : ISessionService
         .Where(s => s.RoomId == roomId)
         .Include(s => s.Prostorija)
         .Include(s => s.Aktivnost)
+        .ThenInclude(a => a!.Tip)
         .ToListAsync();
         List<ViewSessionDTO> sessionViews = [];
 
@@ -60,6 +63,7 @@ public class SessionService : ISessionService
                 Id = s.Id,
                 NazivProstorije = s.Prostorija!.Naziv,
                 NazivAktivnosti = s.Aktivnost!.Name,
+                TipAktivnosti = s.Aktivnost!.Tip!.Naziv,
                 Datum = s.Datum,
                 VremePocetka = s.VremePocetka,
                 VremeKraja = s.VremeKraja,
@@ -78,7 +82,7 @@ public class SessionService : ISessionService
             return ServiceResult<ViewSessionDTO>.Error("Nepostojeca soba");
         }
 
-        var activity = await m_context.Activities.Where(a => a.Id == s.AktivnostId).FirstOrDefaultAsync();
+        var activity = await m_context.Activities.Include(a => a.Tip).FirstOrDefaultAsync(a => a.Id == s.AktivnostId);
         if (activity == null)
         {
             return ServiceResult<ViewSessionDTO>.Error("Nepostojeća aktivnost!");
@@ -105,6 +109,7 @@ public class SessionService : ISessionService
             Id = sesija.Id,
             NazivProstorije = sesija.Prostorija.Naziv,
             NazivAktivnosti = sesija.Aktivnost.Name,
+            TipAktivnosti = activity.Tip!.Naziv,
             Datum = sesija.Datum,
             VremePocetka = sesija.VremePocetka,
             VremeKraja = sesija.VremeKraja,

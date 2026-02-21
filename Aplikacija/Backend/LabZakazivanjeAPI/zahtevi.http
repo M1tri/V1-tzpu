@@ -12,7 +12,7 @@ POST {{baseUrl}}/api/rooms/AddRoom
 Content-Type: application/json
 
 {
-    "naziv" : "R1",
+    "naziv" : "E1",
     "raspored" : "((1:12.23.42.11, ,2:23.23.11.12),(3:12.23.42.11, 4:23.23.11.12, ))",
     "capacity" : 4
 }
@@ -30,7 +30,7 @@ POST {{baseUrl}}/api/activities/AddActivity
 Content-Type: application/json
 
 {
-    "naziv" : "Programski prevodioci LV1",
+    "naziv" : "Racunarski vid LV1",
     "activityClassId" : 3,
     "vlrids" : [
         "Jflex"
@@ -54,11 +54,11 @@ POST {{baseUrl}}/api/sessions/AddSession
 Content-Type: application/json
 
 {
-    "roomId": 3,
-    "aktivnostId": 3,
-    "datum": "2026-03-20",
-    "vremePocetka": "15:00:00",
-    "vremeKraja": "20:30:00",
+    "roomId": 2,
+    "aktivnostId": 1,
+    "datum": "2026-03-03",
+    "vremePocetka": "17:00:00",
+    "vremeKraja": "18:00:00",
     "automatskiPocetak": false,
     "automatskiKraj": false,
     "automatskoKrajnjeStanje": 4
