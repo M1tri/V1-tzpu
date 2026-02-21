@@ -12,7 +12,7 @@ POST {{baseUrl}}/api/rooms/AddRoom
 Content-Type: application/json
 
 {
-    "naziv" : "E1",
+    "naziv" : "R1",
     "raspored" : "((1:12.23.42.11, ,2:23.23.11.12),(3:12.23.42.11, 4:23.23.11.12, ))",
     "capacity" : 4
 }
@@ -30,7 +30,8 @@ POST {{baseUrl}}/api/activities/AddActivity
 Content-Type: application/json
 
 {
-    "name" : "Programski prevodioci LV1",
+    "naziv" : "Programski prevodioci LV1",
+    "activityClassId" : 3,
     "vlrids" : [
         "Jflex"
     ]

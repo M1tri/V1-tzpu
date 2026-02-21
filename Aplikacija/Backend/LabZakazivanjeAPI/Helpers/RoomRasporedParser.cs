@@ -1,10 +1,10 @@
 using System.Text;
 
 namespace LabZakazivanjeAPI.Helpers;
+public record Seat(int? Id, string? IP);
 
 public class RoomRasporedParser
 {
-    public record Seat(int? Id, string? IP);
 
     public static List<int> GetSeatIds(string raspored)
     {

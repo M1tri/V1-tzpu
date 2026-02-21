@@ -1,4 +1,5 @@
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Models.DTOs;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ public class ActivityController : ControllerBase
     }
 
     [HttpGet("GetActivities")]
-    public async Task<ActionResult<IEnumerable<Activity>>> GetActivities()
+    public async Task<ActionResult<IEnumerable<ViewActivityDTO>>> GetActivities()
     {
         var activities = await m_activityService.GetActivites();
 
@@ -32,7 +33,7 @@ public class ActivityController : ControllerBase
     }
 
     [HttpPost("AddActivity")]
-    public async Task<ActionResult<Activity>> AddActivity([FromBody] Activity a)
+    public async Task<ActionResult<ViewActivityDTO>> AddActivity([FromBody] CreateActivityDTO a)
     {
         var activity = await m_activityService.AddActivity(a);
 

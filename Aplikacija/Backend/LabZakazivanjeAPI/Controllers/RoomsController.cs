@@ -1,6 +1,7 @@
 namespace LabZakazivanjeAPI.Controllers;
 
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Models.DTOs;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ public class RoomsController : ControllerBase
     }
 
     [HttpGet("GetRooms")]
-    public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
+    public async Task<ActionResult<IEnumerable<ViewRoomDTO>>> GetRooms()
     {
         var rooms = await m_roomsService.GetRooms();
 
@@ -32,7 +33,7 @@ public class RoomsController : ControllerBase
     }
 
     [HttpPost("AddRoom")]
-    public async Task<ActionResult<Room>> AddRoom([FromBody] Room r)
+    public async Task<ActionResult<ViewRoomDTO>> AddRoom([FromBody] CreateRoomDTO r)
     {
         var room = await m_roomsService.AddRooms(r);
 

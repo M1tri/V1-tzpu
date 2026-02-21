@@ -1,6 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
 using LabZakazivanjeAPI.Helpers;
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Models.DTOs;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,13 +16,29 @@ public class RoomsService : IRoomsService
         m_context = context;
     }
 
-    public async Task<ServiceResult<IEnumerable<Room>>> GetRooms()
+    public async Task<ServiceResult<IEnumerable<ViewRoomDTO>>> GetRooms()
     {
         var rooms = await m_context.Rooms.ToListAsync();
-        return ServiceResult<IEnumerable<Room>>.Ok(rooms);
+
+        List<ViewRoomDTO> roomViews = [];
+
+        foreach (var r in rooms)
+        {
+            List<List<Seat>> raspored = RoomRasporedParser.ParseRaspored(r.Raspored);
+
+            roomViews.Add(new ViewRoomDTO
+            {
+                Id = r.Id,
+                Naziv = r.Naziv,
+                Capacity = r.Capacity,
+                Raspored = raspored
+            });
+        }
+
+        return ServiceResult<IEnumerable<ViewRoomDTO>>.Ok(roomViews);
     }
 
-    public async Task<ServiceResult<Room>> AddRooms(Room r)
+    public async Task<ServiceResult<ViewRoomDTO>> AddRooms(CreateRoomDTO r)
     {
         Room room = new Room
         {
@@ -33,6 +50,14 @@ public class RoomsService : IRoomsService
         await m_context.Rooms.AddAsync(room);
         await m_context.SaveChangesAsync();
 
-        return ServiceResult<Room>.Ok(room);
+        ViewRoomDTO view = new ViewRoomDTO
+        {
+            Id = room.Id,
+            Naziv = room.Naziv,
+            Capacity = room.Capacity,
+            Raspored = RoomRasporedParser.ParseRaspored(room.Raspored)
+        };
+
+        return ServiceResult<ViewRoomDTO>.Ok(view);
     }
 }
