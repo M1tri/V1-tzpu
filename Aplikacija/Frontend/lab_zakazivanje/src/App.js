@@ -1,5 +1,7 @@
 import './App.css';
 import Tanstack from './Components/Tanstack.js';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faComputer, faClockRotateLeft, faCalendarDays, faRectangleList } from '@fortawesome/free-solid-svg-icons';
 import React, { useState, useEffect } from 'react';
 import { SessionView } from './DTOs/session.js';
 import { RoomView } from './DTOs/room.js';
@@ -173,12 +175,12 @@ function App() {
         <div className="oglasnaTabla">
         <div className="oglasnaTabla-header"></div>
         <div className="oglasnaTabla-paper">
-            <h1>Zakazivanje laboratorijskih vežbi</h1>
             <div className='mainAktivnosti'>
                 <div className='aktivnostiLeft'>
-                    <div className="mb-3">
+                    <h1>Zakazivanje laboratorijskih vežbi</h1>
+                    <div className="room-select-container">
                         <label htmlFor="roomSelect" className="form-label fw-bold me-2">
-                            Izaberite prostoriju:
+                            <FontAwesomeIcon icon={faComputer} className="me-2" /> Izaberite prostoriju:
                         </label>
                         <select
                             id="roomSelect"
@@ -186,7 +188,6 @@ function App() {
                             value={selectedRoom || ""}
                             onChange={(e) => handleRoomChange(e.target.value)}
                         >
-                            <option value="">Odaberite...</option>
                             {rooms.map((room) => (
                             <option key={room.id} value={room.id}>
                                 {room.naziv}
@@ -195,15 +196,15 @@ function App() {
                         </select>
                         </div>
                     <div>
-                        <Tanstack tableData={data} naslov="Pregled aktivnosti" enableFeatures = {false}/>
+                        <Tanstack tableData={data} naslov={<><FontAwesomeIcon icon={faRectangleList} className="me-2" /> Pregled aktivnosti</>} enableFeatures = {false}/>
                     </div>
                 </div>
                 <div className='aktivnostiRight'>
                     <div>
-                        <Tanstack tableData={plannedData} naslov="Planirane aktivnosti"/>
+                        <Tanstack tableData={data} naslov={<><FontAwesomeIcon icon={faCalendarDays} className="me-2" /> Planirane aktivnosti</>}/>
                     </div>
                     <div>
-                        <Tanstack tableData={finishedData} naslov="Istorija aktivnosti"/>
+                        <Tanstack tableData={data} naslov={<><FontAwesomeIcon icon={faClockRotateLeft} className="me-2" /> Istorija aktivnosti</>}/>
                     </div>
                 </div>
             </div>

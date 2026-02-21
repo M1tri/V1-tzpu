@@ -150,19 +150,23 @@ h4
     justify-content: space-between;
 }
 
-.search-box {
-    border: none;
-    outline: none;
-    padding: 0 5px;
-    font-size: 15px;
-    border-radius: 5px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
+.search-box 
+{
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background-color: #fdfdfd;
+    font-size: 14px;
+    transition: border 0.2s, box-shadow 0.2s;
 }
 
 .search-box:hover, .search-box:focus {
     background-color: aliceblue;
     cursor: pointer;
+    border-color: dodgerblue;
+    box-shadow: 0 0 5px rgba(30,144,255,0.3);
+    outline: none;
 }
 
 .tabelaDiv
@@ -175,7 +179,6 @@ h4
 .mainAktivnosti
 {
     display: flex;
-    flex-direction: column;
     gap: 50px;
 }
 
@@ -184,6 +187,8 @@ h4
     display: flex;
     gap:20px;
     width: fit-content;
+    flex-direction: column;
+    width: 60%;
 }
 
 .aktivnostiLeft
@@ -191,4 +196,42 @@ h4
     display: flex;
     gap:20px;
     width: fit-content;
+    flex-direction: column;
+    width: 40%;
+}
+
+.room-select-container 
+{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.room-select-container label {
+    font-weight: 600;
+    color: #333;
+}
+
+.room-select-container select 
+{
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background-color: #fdfdfd;
+    font-size: 14px;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+
+.room-select-container select:hover
+{
+    cursor: pointer;
+}
+
+.room-select-container select:focus 
+{
+    border-color: dodgerblue;
+    box-shadow: 0 0 5px rgba(30,144,255,0.3);
+    outline: none;
 }

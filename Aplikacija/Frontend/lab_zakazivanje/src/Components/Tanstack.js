@@ -8,6 +8,8 @@ import {
   getFilteredRowModel
 } from "@tanstack/react-table";
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
 export default function Tanstack({tableData, naslov, enableFeatures = true})
 {
@@ -173,13 +175,21 @@ export default function Tanstack({tableData, naslov, enableFeatures = true})
         <div className="container mt-4 tabelaDiv">
             <div className="tabelaIznad">
                 <h4>{naslov}</h4>
-                {enableFeatures && (<input
-                    type="text"
-                    className="form-control mb-3 search-box"
-                    placeholder="Pretraga"
-                    value={globalFilter ?? ""}
-                    onChange={(e) => setGlobalFilter(e.target.value)}
-                />)}
+                {enableFeatures && (
+                    <div className="input-group mb-3" style={{display:"flex", gap:"5px", alignItems:"center"}}>
+                        <span className="input-group-text" id="search-addon">
+                            <FontAwesomeIcon icon={faMagnifyingGlass} />
+                        </span>
+                        <input
+                        type="text"
+                        className="form-control search-box"
+                        value={globalFilter ?? ""}
+                        onChange={(e) => setGlobalFilter(e.target.value)}
+                        aria-label="Pretraga"
+                        aria-describedby="search-addon"
+                        />
+                    </div>
+                    )}
             </div>
             <table className="table table-bordered table-striped tabela">
                 <thead>
