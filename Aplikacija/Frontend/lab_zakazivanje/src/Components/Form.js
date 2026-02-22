@@ -26,10 +26,10 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
             return;
 
         setDate(editSessionData.datum);
-        setStartTime(editSessionData.vremePoc);
-        setEndTime(editSessionData.vremeKraja);
+        setStartTime(editSessionData.vremePoc.slice(0, 5));
+        setEndTime(editSessionData.vremeKraja.slice(0,5));
 
-        const activity = activities.find(a => a.naziv === editSessionData.nazivAktivnosti);
+        const activity = activities.find(a => a.naziv == editSessionData.naziv);
 
         if (activity) {
             setSelectedActivity({
@@ -125,12 +125,15 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                         value={selectedActivity}
                         onChange={setSelectedActivity}
                         isSearchable={true}
-                        placeholder="🔍︎ Pretraži aktivnosti..."
+                        placeholder={editMode ? null : "🔍︎ Pretraži aktivnosti..."}
                     />
 
                     <label className="form-label">Tip aktivnosti:</label>
-                    <input type="text" className="form-control search-box" disabled={true} 
-                    value={selectedActivity ? selectedActivity.tip : ""} />
+                    <input 
+                        type="text" 
+                        className="form-control search-box" 
+                        disabled={true} 
+                        value={selectedActivity ? selectedActivity.tip : ""}/>
 
                     <label className="form-label">Datum održavanja:</label>
                     <input 

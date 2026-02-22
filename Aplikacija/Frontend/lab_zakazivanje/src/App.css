@@ -427,3 +427,16 @@ h4
 .tooltip:hover::after {
   opacity: 1;
 }
+
+.btnEdit
+{
+    background-color: white;
+    font-size: large;
+    border: none;
+}
+
+.btnEdit:hover
+{
+    color: dodgerblue;
+    cursor: pointer;
+}

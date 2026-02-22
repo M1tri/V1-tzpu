@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-table";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faPenToSquare, faGear } from '@fortawesome/free-solid-svg-icons';
 
 export default function Tanstack({tableData, naslov, enableFeatures = true, newlyAddedId, setNewlyAddedId, onEditClicked})
 {
@@ -127,13 +127,13 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
         const hasPlanned = tableData.some(row => row.status === "planned");
         if (hasPlanned) {
             baseCols.push({
-                header: ({ column }) => <div>Edit</div>,
+                header: ({ column }) => <div><FontAwesomeIcon icon={faGear} /></div>,
                 accessorKey: "edit",
                 cell: info => 
                 <button 
-                className="btn btn-sm btn-warning"
-                onClick={() => onEditClicked(info.row.original.id)}>
-                Edit
+                    className="btn btn-sm btn-warning btnEdit"
+                    onClick={() => onEditClicked(info.row.original.id)}>
+                    <FontAwesomeIcon icon={faPenToSquare} />
                 </button>,
                 enableSorting: false
             });
