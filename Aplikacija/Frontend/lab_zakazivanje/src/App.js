@@ -23,7 +23,7 @@ function App() {
     useEffect(() => {
         async function fetchRooms() {
             try {
-                const res = await fetch("http://localhost:5131/api/rooms/GetRooms");
+                const res = await fetch("https://localhost:7213/api/rooms/GetRooms");
                 if (!res.ok) 
                     throw new Error("Greska pri ucitavanju prostorija");
 
@@ -57,7 +57,7 @@ function App() {
         async function fetchData() {
         try 
         {
-            const response = await fetch(`http://localhost:5131/api/sessions/GetSessionsInRoom?roomId=${selectedRoom}`);
+            const response = await fetch(`https://localhost:7213/api/sessions/GetSessionsInRoom?roomId=${selectedRoom}`);
             if (!response.ok) 
             {
                 throw new Error("Greska pri ucitavanju sesija.");
@@ -86,7 +86,7 @@ function App() {
     useEffect(() => {
         async function fetchActivities() {
             try {
-                const res = await fetch("http://localhost:5131/api/activities/GetActivities");
+                const res = await fetch("https://localhost:7213/api/activities/GetActivities");
                 if (!res.ok) 
                     throw new Error("Greska pri ucitavanju aktivnosti");
 
@@ -120,7 +120,7 @@ function App() {
             
             setEditSessionLoading(true);
             try {
-                const res = await fetch(`http://localhost:5131/api/sessions/GetSession?sessionId=${sessionId}`);
+                const res = await fetch(`https://localhost:7213/api/sessions/GetSession?sessionId=${sessionId}`);
                 if (!res.ok) 
                     throw new Error("Greska pri pribavljanju sesije");
 

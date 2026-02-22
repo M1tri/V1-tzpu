@@ -21,7 +21,7 @@ builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IRoomsService, RoomsService>();
 builder.Services.AddHttpClient<IInfrastructureClient, InfrastructureClient>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5131");
+    client.BaseAddress = new Uri("https://localhost:7213");
 });
 
 builder.Services.AddCors(options =>
@@ -55,7 +55,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("ReactDevPolicy");
+app.UseCors("AllowAll");
 
 app.MapControllers();
 app.Run();

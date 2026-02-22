@@ -39,7 +39,10 @@ public class SessionService : ISessionService
                 Datum = s.Datum,
                 VremePocetka = s.VremePocetka,
                 VremeKraja = s.VremeKraja,
-                Stanje = s.Stanje
+                Stanje = s.Stanje,
+                AutomatskiPocetak = s.AutomatskiPocetak,
+                AutomatskiKraj = s.AutomatskiKraj,
+                AutomatskoKrajnjeStanje = s.AutomatskoStanjeZavrsavanja
             });
         }
 
@@ -67,7 +70,10 @@ public class SessionService : ISessionService
                 Datum = s.Datum,
                 VremePocetka = s.VremePocetka,
                 VremeKraja = s.VremeKraja,
-                Stanje = s.Stanje
+                Stanje = s.Stanje,
+                AutomatskiPocetak = s.AutomatskiPocetak,
+                AutomatskiKraj = s.AutomatskiKraj,
+                AutomatskoKrajnjeStanje = s.AutomatskoStanjeZavrsavanja
             });
         }
 
@@ -94,7 +100,10 @@ public class SessionService : ISessionService
             Datum = sesija.Datum,
             VremePocetka = sesija.VremePocetka,
             VremeKraja = sesija.VremeKraja,
-            Stanje = sesija.Stanje
+            Stanje = sesija.Stanje,
+            AutomatskiPocetak = sesija.AutomatskiPocetak,
+            AutomatskiKraj = sesija.AutomatskiKraj,
+            AutomatskoKrajnjeStanje = sesija.AutomatskoStanjeZavrsavanja
         };
 
         return ServiceResult<ViewSessionDTO>.Ok(view);
@@ -139,7 +148,91 @@ public class SessionService : ISessionService
             Datum = sesija.Datum,
             VremePocetka = sesija.VremePocetka,
             VremeKraja = sesija.VremeKraja,
-            Stanje = sesija.Stanje
+            Stanje = sesija.Stanje,
+            AutomatskiKraj = sesija.AutomatskiKraj,
+            AutomatskiPocetak = sesija.AutomatskiPocetak,
+            AutomatskoKrajnjeStanje = sesija.AutomatskoStanjeZavrsavanja
+        };
+
+        return ServiceResult<ViewSessionDTO>.Ok(view);
+    }
+
+    public async Task<ServiceResult<ViewSessionDTO>> EditSession(UpdateSessionDTO s)
+    {
+        var sesija = await m_context
+        .Sessions
+        .Include(s => s.Prostorija)
+        .Include(s => s.Aktivnost)
+        .ThenInclude(a => a!.Tip)
+        .FirstOrDefaultAsync(se => se.Id == s.Id);
+
+        if (sesija == null)
+            return ServiceResult<ViewSessionDTO>.Error("Ne postoji sesija sa tim Id-em");
+
+        if (s.RoomId != null)
+        {
+            var room = await m_context.Rooms.FirstOrDefaultAsync(r => r.Id == s.RoomId);
+
+            if (room == null)
+                return ServiceResult<ViewSessionDTO>.Error("Ne postoji soba sa tim Id-em");
+
+            sesija.Prostorija = room;
+        }
+
+        if (s.AktivnostId != null)
+        {
+            var aktivnost = await m_context
+            .Activities
+            .Include(s => s.Tip)
+            .FirstOrDefaultAsync(a => a.Id == s.AktivnostId);
+
+            if (aktivnost == null)
+                return ServiceResult<ViewSessionDTO>.Error("Ne postoji ta aktivnost");
+
+            sesija.Aktivnost = aktivnost;
+        }
+
+        if (s.Datum.HasValue)
+            sesija.Datum = s.Datum.Value;
+        
+        if (s.VremePocetka.HasValue)
+            sesija.VremePocetka = s.VremePocetka.Value;
+        
+        if (s.VremeKraja.HasValue)
+            sesija.VremeKraja = s.VremeKraja.Value;
+        
+        if (s.AutomatskiPocetak.HasValue)
+            sesija.AutomatskiPocetak = s.AutomatskiPocetak.Value;
+        
+        if (s.AutomatskiKraj.HasValue)
+        {
+            sesija.AutomatskiKraj = s.AutomatskiKraj.Value;
+
+            if (s.AutomatskiKraj.Value == true)
+            {
+                if (!s.AutomatskoKrajnjeStanje.HasValue)
+                    return ServiceResult<ViewSessionDTO>.Error("Podesen automatski kraj ali nije poslato stanje u koje se prelazi");
+                
+                sesija.AutomatskoStanjeZavrsavanja = s.AutomatskoKrajnjeStanje.Value;
+            } 
+        }
+
+        m_context.Sessions.Update(sesija);
+        await m_context.SaveChangesAsync();
+
+        ViewSessionDTO view = new()
+        {
+            Id = sesija.Id,
+            NazivProstorije = sesija.Prostorija!.Naziv,
+            NazivAktivnosti = sesija.Aktivnost!.Name,
+            TipAktivnosti = sesija.Aktivnost!.Tip!.Naziv,
+            Datum = sesija.Datum,
+            VremePocetka = sesija.VremePocetka,
+            VremeKraja = sesija.VremeKraja,
+            Stanje = sesija.Stanje,
+            AutomatskiPocetak = sesija.AutomatskiPocetak,
+            AutomatskiKraj = sesija.AutomatskiKraj,
+            AutomatskoKrajnjeStanje = sesija.AutomatskoStanjeZavrsavanja
         };
 
         return ServiceResult<ViewSessionDTO>.Ok(view);

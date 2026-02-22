@@ -70,7 +70,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
 
         try 
         {
-            const response = await fetch("http://localhost:5131/api/sessions/AddSession", 
+            const response = await fetch("https://localhost:7213/api/sessions/AddSession", 
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
