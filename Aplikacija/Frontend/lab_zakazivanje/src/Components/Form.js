@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { SessionView } from "../DTOs/session";
 
-export default function Form({ setMode, room, rooms, activities, onSessionAdded }) {
+export default function Form({ setMode, room, rooms, activities, onSessionAdded, editMode, editSessionData}) {
 
     const [date, setDate] = useState("");
     const [startTime, setStartTime] = useState("12:00");
@@ -20,6 +20,26 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded 
 
     const optionsA = activities.map(a => ({ value: a.id, label: a.naziv, tip: a.tip }));
     const optionsR = rooms.map(r => ({ value: r.id, label: r.naziv}));
+
+    useEffect(() => {
+        if (!editMode || !editSessionData)
+            return;
+
+        setDate(editSessionData.datum);
+        setStartTime(editSessionData.vremePoc);
+        setEndTime(editSessionData.vremeKraja);
+
+        const activity = activities.find(a => a.naziv === editSessionData.nazivAktivnosti);
+
+        if (activity) {
+            setSelectedActivity({
+                value: activity.id,
+                label: activity.naziv,
+                tip: activity.tip
+            });
+        }
+
+    }, [editMode, editSessionData, rooms, activities]);
 
     const isFormValid = () => {
         return (
@@ -109,7 +129,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded 
                     />
 
                     <label className="form-label">Tip aktivnosti:</label>
-                    <input type="text" className="form-control search-box" disabled="true" 
+                    <input type="text" className="form-control search-box" disabled={true} 
                     value={selectedActivity ? selectedActivity.tip : ""} />
 
                     <label className="form-label">Datum održavanja:</label>

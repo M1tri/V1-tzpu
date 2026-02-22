@@ -74,6 +74,32 @@ public class SessionService : ISessionService
         return ServiceResult<IEnumerable<ViewSessionDTO>>.Ok(sessionViews);        
     }
 
+    public async Task<ServiceResult<ViewSessionDTO>> GetSession(int sessionId)
+    {
+        var sesija = await m_context.Sessions
+        .Include(s => s.Prostorija)
+        .Include(s => s.Aktivnost)
+        .ThenInclude(a => a!.Tip)
+        .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+        if (sesija == null)
+            return ServiceResult<ViewSessionDTO>.Error("Ne postoji sesija");
+        
+        ViewSessionDTO view = new ViewSessionDTO
+        {
+            Id = sesija.Id,
+            NazivProstorije = sesija.Prostorija!.Naziv,
+            NazivAktivnosti = sesija.Aktivnost!.Name,
+            TipAktivnosti = sesija.Aktivnost!.Tip!.Naziv,
+            Datum = sesija.Datum,
+            VremePocetka = sesija.VremePocetka,
+            VremeKraja = sesija.VremeKraja,
+            Stanje = sesija.Stanje
+        };
+
+        return ServiceResult<ViewSessionDTO>.Ok(view);
+    }
+
     public async Task<ServiceResult<ViewSessionDTO>> AddSession(CreateSessionDTO s)
     {   
         var room = await m_context.Rooms.Where(r => r.Id == s.RoomId).FirstOrDefaultAsync();

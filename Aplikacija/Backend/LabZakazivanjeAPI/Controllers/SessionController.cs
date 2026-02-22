@@ -49,6 +49,21 @@ public class SessionController : ControllerBase
         }
     }
 
+    [HttpGet("GetSession")]
+    public async Task<ActionResult<ViewSessionDTO>> GetSession([FromQuery] int sessionId)
+    {
+        var session = await m_sessionService.GetSession(sessionId);
+
+        if (session.Success)
+        {
+            return Ok(session.Data);
+        }
+        else
+        {
+            return BadRequest(session.ErrorMessage);
+        }
+    }
+
     [HttpPost("AddSession")]
     public async Task<ActionResult<Session>> AddSession([FromBody] CreateSessionDTO s)
     {

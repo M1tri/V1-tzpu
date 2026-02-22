@@ -16,6 +16,9 @@ function App() {
     const [activitiesLoading, setActivitiesLoading] = useState(true);
     const [mode, setMode] = useState("list"); 
     const [newlyAddedId, setNewlyAddedId] = useState(null);
+    const [editSessionId, setEditSessionId] = useState(-1);
+    const [editSessionData, setEditSessionData] = useState(null);
+    const [editSessionLoading, setEditSessionLoading] = useState(false);
 
     useEffect(() => {
         async function fetchRooms() {
@@ -107,6 +110,38 @@ function App() {
         fetchActivities();
     }, []);
 
+    useEffect(() => {
+        async function fetcSessionData(sessionId) {
+            if (sessionId == -1)
+            {
+                setEditSessionData(null);
+                return;
+            }
+            
+            setEditSessionLoading(true);
+            try {
+                const res = await fetch(`http://localhost:5131/api/sessions/GetSession?sessionId=${sessionId}`);
+                if (!res.ok) 
+                    throw new Error("Greska pri pribavljanju sesije");
+
+                const json = await res.json();
+
+                const view = new SessionView(json.id, json.nazivAktivnosti, json.tipAktivnosti, json.datum, json.vremePocetka, json.vremeKraja, json.stanje);
+                setEditSessionData(view);
+            } 
+            catch (err) 
+            {
+                console.error(err);
+            } 
+            finally 
+            {
+                setEditSessionLoading(false);
+            }
+        };
+        
+        fetcSessionData(editSessionId);
+    }, [editSessionId]);
+
     const handleRoomChange = (roomId) => 
     {
         setSelectedRoom(Number(roomId));
@@ -122,115 +157,63 @@ function App() {
 
     if (roomsLoading) return <div>Učitavanje prostorija...</div>;
     if (loading) return <div>Učitavanje sesija...</div>;
+    if (mode == "edit" && editSessionLoading) return <div>Učitavanje sesija...</div>;
 
-    console.log(activities);
-  
-    /*const data = [
-        {
-            aktivnost: "AOR LV1",
-            klasa: "AOR LAB VEZBA",
-            datum: "2026-11-09",
-            vremePoc: "18:00:00",
-            vremeKraja: "19:30:00",
-            status: "active"
-        },
-        {
-            aktivnost: "AIP LV3",
-            klasa: "AIP LAB VEZBA",
-            datum: "2026-02-20",
-            vremePoc: "14:00:00",
-            vremeKraja: "15:30:00",
-            status: "fading"
-        },
-        {
-            aktivnost: "UUR LV5",
-            klasa: "UUR LAB VEZBA",
-            datum: "2026-06-25",
-            vremePoc: "08:00:00",
-            vremeKraja: "09:00:00",
-            status: "planned"
-        },
-        {
-            aktivnost: "UUR LV5",
-            klasa: "UUR LAB VEZBA",
-            datum: "2026-01-02",
-            vremePoc: "08:00:00",
-            vremeKraja: "09:00:00",
-            status: "next"
-        },
-        {
-            aktivnost: "UUR LV5",
-            klasa: "UUR LAB VEZBA",
-            datum: "2026-01-02",
-            vremePoc: "08:00:00",
-            vremeKraja: "09:00:00",
-            status: "finished"
-        },
-        {
-            aktivnost: "UUR LV5",
-            klasa: "UUR LAB VEZBA",
-            datum: "2026-06-25",
-            vremePoc: "08:00:00",
-            vremeKraja: "09:00:00",
-            status: "planned"
-        },
-        {
-            aktivnost: "UUR LV5",
-            klasa: "UUR LAB VEZBA",
-            datum: "2026-01-02",
-            vremePoc: "08:00:00",
-            vremeKraja: "09:00:00",
-            status: "next"
-        },
-        {
-            aktivnost: "UUR LV5",
-            klasa: "UUR LAB VEZBA",
-            datum: "2026-01-02",
-            vremePoc: "08:00:00",
-            vremeKraja: "09:00:00",
-            status: "finished"
-        },
-        {
-            aktivnost: "UUR LV5",
-            klasa: "UUR LAB VEZBA",
-            datum: "2026-01-02",
-            vremePoc: "08:00:00",
-            vremeKraja: "09:00:00",
-            status: "next"
-        },
-        {
-            aktivnost: "UUR LV5",
-            klasa: "UUR LAB VEZBA",
-            datum: "2026-01-02",
-            vremePoc: "08:00:00",
-            vremeKraja: "09:00:00",
-            status: "finished"
-        }
-    ];*/
+    let content;
+
+    if (mode === "list")
+    {
+        content = (
+            <Overview 
+                data={data}
+                rooms={rooms}
+                selectedRoom={selectedRoom}
+                handleRoomChange={handleRoomChange}
+                setMode={setMode}
+                newlyAddedId={newlyAddedId}
+                setNewlyAddedId={setNewlyAddedId}
+                setSessionEdit={setEditSessionId}
+            />
+        );
+    }
+    else if (mode == "add")
+    {
+        content = (
+            <Form 
+                setMode={setMode}
+                room={rooms.find(r => r.id === selectedRoom)}
+                rooms = {rooms}
+                activities={activities}
+                onSessionAdded={handleSessionAdded}
+                editMode={false}
+                editSessionId={null}
+            />
+        )
+    }
+    else if (mode == "edit")
+    {
+        if (!editSessionData)
+            content = (<div>Ucitavanja podataka sesije</div>);
+        else {
+            content = (
+                <Form 
+                    setMode={setMode}
+                    room={rooms.find(r => r.id === selectedRoom)}
+                    rooms = {rooms}
+                    activities={activities}
+                    onSessionAdded={handleSessionAdded}
+                    editMode={true}
+                    editSessionData={editSessionData}
+                />
+            )     
+        }   
+    }
 
     return (
         <div className="oglasnaTabla">
-        <div className="oglasnaTabla-header"></div>
-        <div className="oglasnaTabla-paper">
-                {mode === "list" ? (
-                    <Overview 
-                        data={data}
-                        rooms={rooms}
-                        selectedRoom={selectedRoom}
-                        handleRoomChange={handleRoomChange}
-                        setMode={setMode}
-                        newlyAddedId={newlyAddedId}
-                        setNewlyAddedId={setNewlyAddedId}
-                    />
-                ) : (
-                    <Form 
-                        setMode={setMode}
-                        room={rooms.find(r => r.id === selectedRoom)}
-                        rooms = {rooms}
-                        activities={activities}
-                        onSessionAdded={handleSessionAdded}
-                    />
-                )}
+            <div className="oglasnaTabla-header"></div>
+            <div className="oglasnaTabla-paper">
+                {content}
             </div>
         </div>
     );
