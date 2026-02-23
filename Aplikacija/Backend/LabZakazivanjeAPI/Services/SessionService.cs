@@ -310,6 +310,25 @@ public class SessionService : ISessionService
         return ServiceResult<string>.Ok("Sredjeno");
     }
 
+    public async Task<ServiceResult<string>> DemoteToPlanned(int sessionId)
+    {
+        var sesija = await m_context.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId);
+        if (sesija == null)
+            return ServiceResult<string>.Error("Nepostojeca sesija");
+
+        if (sesija.Stanje != SessionState.NEXT)
+            return ServiceResult<string>.Error("Ova akcija je primenjiva samo na sesije u NEXT stanju");
+        
+        var vlrs = await m_context.ActiveVLRs.Where(v => v.SessionId == sessionId).ToListAsync();
+
+        foreach (var v in vlrs)
+            m_context.ActiveVLRs.Remove(v);
+
+        sesija.Stanje = SessionState.PLANNED;
+
+        return ServiceResult<string>.Ok("Sesija uspesno vracena u PLANNED");
+    }
+
     public async Task<ServiceResult<string>> Activate(int sessionId)
     {
         var sesija = await m_context.Sessions
@@ -449,6 +468,6 @@ public class SessionService : ISessionService
 
         await m_context.SaveChangesAsync();
 
-        return ServiceResult<string>.Ok("Sesija presla u fading stanje");
+        return ServiceResult<string>.Ok("Sesija presla u finished stanje");
     }
 }

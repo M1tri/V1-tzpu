@@ -34,6 +34,21 @@ public class VLRController : ControllerBase
         }
     }
 
+    [HttpPut("DemoteToPlanned")]
+    public async Task<ActionResult> DemoteToPlanned([FromQuery] int sessionId)
+    {
+        var result = await m_sessionService.DemoteToPlanned(sessionId);
+
+        if (result.Success)
+        {
+            return Ok(result.Data);
+        }
+        else
+        {
+            return BadRequest(result.ErrorMessage);
+        }
+    }
+
     [HttpPut("Activate")]
     public async Task<ActionResult> Activate([FromQuery] int sessionId)
     {

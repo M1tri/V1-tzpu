@@ -12,6 +12,7 @@ public interface ISessionService
     Task<ServiceResult<ViewSessionDTO>> EditSession(UpdateSessionDTO s);
     Task<ServiceResult<Dictionary<int, string>>> GetSessionResourceStatus(int sessionId);
     Task<ServiceResult<string>> PromoteAsNext(int sessionId);
+    Task<ServiceResult<string>> DemoteToPlanned(int sessionId);
     Task<ServiceResult<string>> Activate(int sessionId);
     Task<ServiceResult<string>> Fade(int sessionId);
     Task<ServiceResult<string>> Terminate(int sessionId);
