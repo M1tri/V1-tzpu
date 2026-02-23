@@ -8,7 +8,7 @@ export class SessionView
         4:"finished"
     })
 
-    constructor(id, naziv, tip, datum, vremePoc, vremeKraja, status)
+    constructor(id, naziv, tip, datum, vremePoc, vremeKraja, status, autoStart, autoEnd, autoState)
     {
         this.id = id;
         this.naziv = naziv;
@@ -17,5 +17,8 @@ export class SessionView
         this.vremePoc = vremePoc;
         this.vremeKraja = vremeKraja;
         this.status = SessionView.Statuses[status];
+        this.autoStart = autoStart;
+        this.autoEnd = autoEnd;
+        this.autoState = autoState;
     }
 }

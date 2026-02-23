@@ -78,4 +78,19 @@ public class SessionController : ControllerBase
             return BadRequest(session.ErrorMessage);
         }
     }
+
+    [HttpPut("EditSession")]
+    public async Task<ActionResult<Session>> EditSession([FromBody] UpdateSessionDTO s)
+    {
+        var session = await m_sessionService.EditSession(s);
+
+        if (session.Success)
+        {
+            return Ok(session.Data);
+        }
+        else
+        {
+            return BadRequest(session.ErrorMessage);
+        }
+    }
 }

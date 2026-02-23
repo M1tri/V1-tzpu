@@ -64,6 +64,23 @@ Content-Type: application/json
     "automatskoKrajnjeStanje": 4
 }
 
+### edit session
+PUT {{baseUrl}}/api/sessions/EditSession
+Content-Type: application/json
+
+{
+    "id":1,
+    "roomId": 1,
+    "aktivnostId": 2,
+    "datum": "2026-03-03",
+    "vremePocetka": "17:00:00",
+    "vremeKraja": "18:00:00",
+    "automatskiPocetak": true,
+    "automatskiKraj": true,
+    "automatskoKrajnjeStanje": 4
+}
+
+
 ###
 
 ### VLRController

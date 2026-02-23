@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faCheck } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faCheck, faClone } from "@fortawesome/free-solid-svg-icons";
 import { SessionView } from "../DTOs/session";
 
-export default function Form({ setMode, room, rooms, activities, onSessionAdded, editMode, editSessionData}) {
+export default function Form({ setMode, room, rooms, activities, onSessionAdded, editMode, editSessionData, onSelectedRoom }) {
 
     const [date, setDate] = useState("");
     const [startTime, setStartTime] = useState("12:00");
@@ -25,6 +25,8 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
         if (!editMode || !editSessionData)
             return;
 
+        console.log(editSessionData);
+
         setDate(editSessionData.datum);
         setStartTime(editSessionData.vremePoc.slice(0, 5));
         setEndTime(editSessionData.vremeKraja.slice(0,5));
@@ -38,6 +40,10 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                 tip: activity.tip
             });
         }
+
+        setAutoStart(editSessionData.autoStart ? "yes" : "no");
+        setAutoEnd(editSessionData.autoEnd ? "yes" : "no");
+        setAutoState(editSessionData.autoState);
 
     }, [editMode, editSessionData, rooms, activities]);
 
@@ -54,28 +60,57 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
     };
 
     const handleSave = async () => {
-        const data = 
-        {
-            roomId: selectedRoom.value,
-            aktivnostId: selectedActivity.value,
-            datum: date,
-            vremePocetka: startTime,
-            vremeKraja: endTime,
-            automatskiPocetak: autoStart === "yes",
-            automatskiKraj: autoEnd === "yes",
-            automatskoKrajnjeStanje: autoEnd === "yes" ? Number(autoState) : 0
-        };
-
-        console.log(data);
 
         try 
         {
-            const response = await fetch("https://localhost:7213/api/sessions/AddSession", 
+            let response;
+            if (!editMode)
             {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
+                const data = 
+                {
+                    roomId: selectedRoom.value,
+                    aktivnostId: selectedActivity.value,
+                    datum: date,
+                    vremePocetka: startTime,
+                    vremeKraja: endTime,
+                    automatskiPocetak: autoStart === "yes",
+                    automatskiKraj: autoEnd === "yes",
+                    automatskoKrajnjeStanje: autoEnd === "yes" ? Number(autoState) : 0
+                };
+
+                response = await fetch("https://localhost:7213/api/sessions/AddSession", 
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+            }
+            else
+            {
+                const data = 
+                {
+                    id: editSessionData.id, 
+                    roomId: selectedRoom.value,
+                    aktivnostId: selectedActivity.value,
+                    datum: date,
+                    vremePocetka: startTime,
+                    vremeKraja: endTime,
+                    automatskiPocetak: autoStart === "yes",
+                    automatskiKraj: autoEnd === "yes",
+                    automatskoKrajnjeStanje: autoEnd === "yes" ? Number(autoState) : 0
+                };
+
+                console.log(data);
+
+                response = await fetch("https://localhost:7213/api/sessions/EditSession", 
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                onSelectedRoom(selectedRoom.value);
+            }
 
             if (!response.ok) 
             {
@@ -92,7 +127,10 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                 savedSession.datum,
                 savedSession.vremePocetka,
                 savedSession.vremeKraja,
-                savedSession.stanje
+                savedSession.stanje,
+                savedSession.automatskiPocetak,
+                savedSession.automatskiKraj,
+                savedSession.automatskoKrajnjeStanje
             ));
 
             setMode("list");
@@ -105,151 +143,220 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
         }
     };
 
+    const handleClone = async () =>
+    {
+        try 
+        {
+            const data = 
+            {
+                roomId: selectedRoom.value,
+                aktivnostId: selectedActivity.value,
+                datum: date,
+                vremePocetka: startTime,
+                vremeKraja: endTime,
+                automatskiPocetak: autoStart === "yes",
+                automatskiKraj: autoEnd === "yes",
+                automatskoKrajnjeStanje: autoEnd === "yes" ? Number(autoState) : 0
+            };
+
+            const response = await fetch("https://localhost:7213/api/sessions/AddSession", 
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            onSelectedRoom(selectedRoom.value);
+
+            if (!response.ok) 
+            {
+                console.log(await response.text())
+                throw new Error("Nije se klonirala sesija.");
+            }
+
+            const savedSession = await response.json();
+
+            onSessionAdded(new SessionView(
+                savedSession.id,
+                savedSession.nazivAktivnosti,
+                savedSession.tipAktivnosti,
+                savedSession.datum,
+                savedSession.vremePocetka,
+                savedSession.vremeKraja,
+                savedSession.stanje,
+                savedSession.automatskiPocetak,
+                savedSession.automatskiKraj,
+                savedSession.automatskoKrajnjeStanje
+            ));
+
+            setMode("list");
+
+        } 
+        catch (err) 
+        {
+            console.error(err);
+            alert("Doslo je do greske prilikom kloniranja sesije.");
+        }
+    }
+
     return (
         <div className="formaWrapper">
             <h1>Dodavanje nove aktivnosti - Prostorija {selectedRoom.label}</h1>
             <div className="formaDiv">
-                <div className="formaLeft">
+                <div className="formaLeftDiv">
+                    <div className="formaLeft">
 
-                    <label className="form-label">Izaberite prostoriju:</label>
-                    <Select
-                        options={optionsR}
-                        value={selectedRoom}
-                        onChange={setSelectedRoom}
-                        isSearchable={true}
-                    />
+                        <label className="form-label">Izaberite prostoriju:</label>
+                        <Select
+                            options={optionsR}
+                            value={selectedRoom}
+                            onChange={setSelectedRoom}
+                            isSearchable={true}
+                        />
 
-                    <label className="form-label">Izaberite aktivnost:</label>
-                    <Select
-                        options={optionsA}
-                        value={selectedActivity}
-                        onChange={setSelectedActivity}
-                        isSearchable={true}
-                        placeholder={editMode ? null : "🔍︎ Pretraži aktivnosti..."}
-                    />
+                        <label className="form-label">Izaberite aktivnost:</label>
+                        <Select
+                            options={optionsA}
+                            value={selectedActivity}
+                            onChange={setSelectedActivity}
+                            isSearchable={true}
+                            placeholder={editMode ? null : "🔍︎ Pretraži aktivnosti..."}
+                        />
 
-                    <label className="form-label">Tip aktivnosti:</label>
-                    <input 
-                        type="text" 
-                        className="form-control search-box" 
-                        disabled={true} 
-                        value={selectedActivity ? selectedActivity.tip : ""}/>
+                        <label className="form-label">Tip aktivnosti:</label>
+                        <input 
+                            type="text" 
+                            className="form-control search-box" 
+                            disabled={true} 
+                            value={selectedActivity ? selectedActivity.tip : ""}/>
 
-                    <label className="form-label">Datum održavanja:</label>
-                    <input 
-                        type="date" 
-                        className="form-control search-box" 
-                        value={date} 
-                        onChange={(e) => setDate(e.target.value)}
-                    />
+                        <label className="form-label">Datum održavanja:</label>
+                        <input 
+                            type="date" 
+                            className="form-control search-box" 
+                            value={date} 
+                            onChange={(e) => setDate(e.target.value)}
+                        />
 
-                    <label className="form-label">Vreme početka:</label>
-                    <input
-                        type="time"
-                        className="form-control search-box"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                    />
+                        <label className="form-label">Vreme početka:</label>
+                        <input
+                            type="time"
+                            className="form-control search-box"
+                            value={startTime}
+                            onChange={(e) => setStartTime(e.target.value)}
+                        />
 
-                    <label className="form-label">Vreme kraja:</label>
-                    <input
-                        type="time"
-                        className="form-control search-box"
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                    />
+                        <label className="form-label">Vreme kraja:</label>
+                        <input
+                            type="time"
+                            className="form-control search-box"
+                            value={endTime}
+                            onChange={(e) => setEndTime(e.target.value)}
+                        />
 
-                    <label className="form-label">Da li se aktivnost automatski aktivira u vreme početka?</label>
-                    <div className="radioButtons">
-                        <div>
+                        <label className="form-label">Da li se aktivnost automatski aktivira u vreme početka?</label>
+                        <div className="radioButtons">
+                            <div>
+                                <input 
+                                    type="radio" 
+                                    name="autoStart" 
+                                    value="yes" 
+                                    checked={autoStart === "yes"} 
+                                    onChange={() => setAutoStart("yes")} 
+                                />
+                                <label>Da</label>
+                            </div>
+                            <div>
                             <input 
                                 type="radio" 
                                 name="autoStart" 
-                                value="yes" 
-                                checked={autoStart === "yes"} 
-                                onChange={() => setAutoStart("yes")} 
-                            />
-                            <label>Da</label>
-                        </div>
-                        <div>
-                        <input 
-                            type="radio" 
-                            name="autoStart" 
-                            value="no" 
-                            checked={autoStart === "no"} 
-                            onChange={() => setAutoStart("no")} 
-                        />
-                        <label>Ne</label>
-                        </div>
-                    </div>
-
-                    <label className="form-label">Da li aktivnost automatski menja stanje u vreme kraja?</label>
-                    <div className="radioButtons">
-                        <div>
-                            <input 
-                                type="radio" 
-                                name="autoEnd" 
-                                value="yes" 
-                                checked={autoEnd === "yes"} 
-                                onChange={() => setAutoEnd("yes")} 
-                            />
-                            <label>Da</label>
-                        </div>
-                        <div>
-                            <input 
-                                type="radio" 
-                                name="autoEnd" 
                                 value="no" 
-                                checked={autoEnd === "no"} 
-                                onChange={() => setAutoEnd("no")} 
+                                checked={autoStart === "no"} 
+                                onChange={() => setAutoStart("no")} 
                             />
                             <label>Ne</label>
+                            </div>
                         </div>
-                    </div>
 
-                    {autoEnd === "yes" && (
-                        <>
-                            <label className="form-label">Aktivnost prelazi u stanje: </label>
-                            <div className="radioButtons">
-                                <div>
+                        <label className="form-label">Da li aktivnost automatski menja stanje u vreme kraja?</label>
+                        <div className="radioButtons">
+                            <div>
                                 <input 
                                     type="radio" 
-                                    name="autoState" 
-                                    value="3"
-                                    checked={autoState === "3"} 
-                                    onChange={() => setAutoState("3")} 
+                                    name="autoEnd" 
+                                    value="yes" 
+                                    checked={autoEnd === "yes"} 
+                                    onChange={() => setAutoEnd("yes")} 
                                 />
-                                <label>FADING</label>
-                                </div>
-                                <div>
+                                <label>Da</label>
+                            </div>
+                            <div>
+                                <input 
+                                    type="radio" 
+                                    name="autoEnd" 
+                                    value="no" 
+                                    checked={autoEnd === "no"} 
+                                    onChange={() => setAutoEnd("no")} 
+                                />
+                                <label>Ne</label>
+                            </div>
+                        </div>
+
+                        {autoEnd === "yes" && (
+                            <>
+                                <label className="form-label">Aktivnost prelazi u stanje: </label>
+                                <div className="radioButtons">
+                                    <div>
                                     <input 
                                         type="radio" 
                                         name="autoState" 
-                                        value="4"
-                                        checked={autoState === "4"} 
-                                        onChange={() => setAutoState("4")} 
+                                        value="3"
+                                        checked={autoState === 3} 
+                                        onChange={() => setAutoState(3)} 
                                     />
-                                    <label>FINISHED</label>
+                                    <label>FADING</label>
+                                    </div>
+                                    <div>
+                                        <input 
+                                            type="radio" 
+                                            name="autoState" 
+                                            value="4"
+                                            checked={autoState === 4} 
+                                            onChange={() => setAutoState(4)} 
+                                        />
+                                        <label>FINISHED</label>
+                                    </div>
                                 </div>
-                            </div>
-                        </>
-                    )}
+                            </>
+                        )}
+                    </div>
+                    <div className="dugmiciDiv">
+                        <button 
+                            className="btn btn-primary btnForm"
+                            onClick={handleSave}
+                            disabled={!isFormValid()}
+                        >
+                        <>Sačuvaj <FontAwesomeIcon icon={faCheck} className="me-2" /></>
+                        </button>
+                      
+                        {editMode && (
+                            <button 
+                                className="btn btn-primary btnForm"
+                                onClick = {handleClone}
+                                disabled={!isFormValid()}
+                            >
+                                <>Kloniraj <FontAwesomeIcon icon={faClone} className="me-2" /></>
+                            </button>
+                        )}
 
-                    <button 
-                        className="btn btn-primary btnForm"
-                        onClick={handleSave}
-                        disabled={!isFormValid()}
-                    >
-                    <>Sačuvaj <FontAwesomeIcon icon={faCheck} className="me-2" /></>
-                    </button>
-
-                    <button 
-                        className="btn btn-secondary btnForm"
-                        onClick={() => setMode("list")}
-                    >
-                    <>Odustani <FontAwesomeIcon icon={faXmark} className="me-2" /></>
-                    </button>
-                </div>
+                        <button 
+                            className="btn btn-secondary btnForm"
+                            onClick={() => setMode("list")}
+                        >
+                        <>Odustani <FontAwesomeIcon icon={faXmark} className="me-2" /></>
+                        </button>
+                    </div>
+            </div>
 
             <div className="addRight">
                 <h3>Dodatne informacije</h3>

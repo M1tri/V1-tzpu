@@ -9,9 +9,9 @@ import {
 } from "@tanstack/react-table";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faPenToSquare, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faPenToSquare, faGear, faCircleUp, faCircleDown, faEye } from '@fortawesome/free-solid-svg-icons';
 
-export default function Tanstack({tableData, naslov, enableFeatures = true, newlyAddedId, setNewlyAddedId, onEditClicked})
+export default function Tanstack({tableData, naslov, enableFeatures = true, newlyAddedId, setNewlyAddedId, onEditClicked, onSetNext, onSetPlanned, onSetActive, onViewResources})
 {
     const [pageIndex, setPageIndex] = useState(0);
     const [pageSize, setPageSize] = useState(3);
@@ -126,7 +126,8 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
 
         const hasPlanned = tableData.some(row => row.status === "planned");
         if (hasPlanned) {
-            baseCols.push({
+            baseCols.push(
+            {
                 header: ({ column }) => <div><FontAwesomeIcon icon={faGear} /></div>,
                 accessorKey: "edit",
                 cell: info => 
@@ -136,7 +137,83 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
                     <FontAwesomeIcon icon={faPenToSquare} />
                 </button>,
                 enableSorting: false
-            });
+            },
+            {
+                header: () => <div>Označi kao sledeću</div>,
+                accessorKey: "setNext",
+                cell: info => 
+                <button 
+                    className="btn btn-sm btn-warning btnPromote btnNext"
+                    onClick={() => onSetNext(info.row.original.id)}
+                >
+                    <FontAwesomeIcon icon={faCircleUp} />
+                </button>,
+                enableSorting: false
+            }
+        );
+        }
+
+        const hasNext = tableData.some(row => row.status === "next");
+        if (hasNext) {
+            baseCols.push(
+            {
+                header: ({ column }) => <div>Označi kao aktivnu</div>,
+                accessorKey: "setActive",
+                cell: info => 
+                <button 
+                    className="btn btn-sm btn-warning btnPromote btnActive"
+                    onClick={() => onSetActive(info.row.original.id)}>
+                    <FontAwesomeIcon icon={faCircleUp} />
+                </button>,
+                enableSorting: false
+            },
+            {
+                header: () => <div>Vrati u planirane</div>,
+                accessorKey: "setPlanned",
+                cell: info => 
+                <button 
+                    className="btn btn-sm btn-warning btnPromote btnPlanned"
+                    onClick={() => onSetPlanned(info.row.original.id)}
+                >
+                    <FontAwesomeIcon icon={faCircleDown} />
+                </button>,
+                enableSorting: false
+            }
+        );
+        }
+        
+        const hasActive = tableData.some(row => row.status === "active");
+        if (hasActive) {
+            baseCols.push(
+            {
+                header: ({ column }) => <div>Upravljaj resursima</div>,
+                accessorKey: "layout",
+                cell: info => 
+                <button 
+                    className="btn btn-sm btn-warning btnPromote"
+                    onClick={() => onViewResources(info.row.original.id)}>
+                    <FontAwesomeIcon icon={faEye} />
+                </button>,
+                enableSorting: false
+            },
+        );
+        }
+
+        const hasFading = tableData.some(row => row.status === "fading");
+        if (hasFading) {
+            baseCols.push(
+            {
+                header: ({ column }) => <div>Upravljaj resursima</div>,
+                accessorKey: "layout",
+                cell: info => 
+                <button 
+                    className="btn btn-sm btn-warning btnPromote"
+                    onClick={() => onViewResources(info.row.original.id)}>
+                    <FontAwesomeIcon icon={faEye} />
+                </button>,
+                enableSorting: false
+            },
+        );
         }
 
         return baseCols;
