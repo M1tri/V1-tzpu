@@ -10,6 +10,7 @@ public class AppDBContext : DbContext
     public DbSet<ActiveVLR> ActiveVLRs {get; set;}
     public DbSet<ActivityClass> ActivityClasses {get; set;}
     public DbSet<VLRStatusInfo> VLRStatusInfos {get; set;}
+    public DbSet<Korisnik> Korisnik {get; set;}
 
     public AppDBContext(DbContextOptions<AppDBContext> options)
         : base(options)
