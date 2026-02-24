@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComputer, faPlus, faCalendarDays, faClockRotateLeft, faRectangleList, faHourglassHalf, faAnglesRight} from "@fortawesome/free-solid-svg-icons";
 import Select from "react-select";
 import { SessionView } from "../DTOs/session.js";
+import Message from "./Message.js";
 
 export default function Overview({ data, setData, rooms, selectedRoom, handleRoomChange, setMode, newlyAddedId, setNewlyAddedId, setSessionEdit, setManageSessionId, onSessionAdded, onSessionDeleted }) {
 
@@ -113,8 +114,11 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
     };
 
     const handleDeletedSession = async (id) => {
+
+        const session = data.find(s => s.id == id);
+
         const confirmDelete = window.confirm(
-            `Da li ste sigurni da želite da obrišete sesiju ?}"?`
+            `Da li ste sigurni da želite da obrišete sesiju ${session.naziv}?`
         );
         if (!confirmDelete) return;
 
@@ -157,27 +161,36 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
                     <h4 className="m-0 trAktNaslov">Pregled trenutnih aktivnosti</h4>
                 </div>
 
-                    {nextData.length > 0 && ( <Tanstack
-                        tableData={nextData}
-                        naslov={<><FontAwesomeIcon icon={faAnglesRight} className="me-2" /> Sledeća sesija</>}
-                        enableFeatures={false}
-                        onSetActive={handleSetActive}
-                        onSetPlanned={handleSetPlanned}
-                    />)}
+                {nextData.length == 0 && activeData.length == 0 && fadingData.length == 0 && (
+                    <Message
+                        message = {"Nema trenutno aktivnih sesija."}
+                        photo = {"/trenutne.png"}
+                        klasa={"messageDiv"}
+                    />
+                )
+                }
 
-                    {(activeData.length > 0 || fadingData.length > 0) && (
-                        <Tanstack
-                            tableData={[...activeData, ...fadingData]}
-                            naslov={
-                            <>
-                                <FontAwesomeIcon icon={faHourglassHalf} className="me-2" /> 
-                                {fadingData.length > 0 ? "Trenutno aktivne sesije" : "Trenutno aktivna sesija"}
-                            </>
-                            }
-                            enableFeatures={false}
-                            onViewResources={handleViewResources}
-                        />
-                    )}
+                {nextData.length > 0 && ( <Tanstack
+                    tableData={nextData}
+                    naslov={<><FontAwesomeIcon icon={faAnglesRight} className="me-2" /> Sledeća sesija</>}
+                    enableFeatures={false}
+                    onSetActive={handleSetActive}
+                    onSetPlanned={handleSetPlanned}
+                />)}
+
+                {(activeData.length > 0 || fadingData.length > 0) && (
+                    <Tanstack
+                        tableData={[...activeData, ...fadingData]}
+                        naslov={
+                        <>
+                            <FontAwesomeIcon icon={faHourglassHalf} className="me-2" /> 
+                            {fadingData.length > 0 ? "Trenutno aktivne sesije" : "Trenutno aktivna sesija"}
+                        </>
+                        }
+                        enableFeatures={false}
+                        onViewResources={handleViewResources}
+                    />
+                )}
 
             </div>
 
@@ -189,21 +202,49 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
                     <h4>Zakažite novu aktivnost</h4>
                 </div>
 
-                <Tanstack 
+                {plannedData.length == 0  && (
+                    <div className="slikaDiv">
+                        <div className="trAkt">
+                            <FontAwesomeIcon icon={faCalendarDays} className="me-2" /> 
+                            <h4 className="m-0 trAktNaslov">Planirane aktivnosti</h4>
+                        </div>
+                        <Message
+                            message = {"Nema planiranih sesija."}
+                            photo = {"/planned.png"}
+                            klasa = {"nijeTrSlika"}
+                        />
+                    </div>
+                )}
+
+                {plannedData.length > 0 && (<Tanstack 
                     tableData={plannedData} 
                     naslov={<><FontAwesomeIcon icon={faCalendarDays} className="me-2" /> Planirane aktivnosti</>}
                     newlyAddedId={newlyAddedId} 
                     setNewlyAddedId={setNewlyAddedId}
                     onEditClicked={(id) => {setSessionEdit(id); setMode("edit")}}
                     onSetNext={handleSetNext}
-                />
+                />)}
+
+                {finishedData.length == 0  && (
+                    <div className="slikaDiv">
+                        <div className="trAkt">
+                            <FontAwesomeIcon icon={faClockRotateLeft} className="me-2" /> 
+                            <h4 className="m-0 trAktNaslov">Istorija aktivnosti</h4>
+                        </div>
+                        <Message
+                            message = {"Nema završenih sesija."}
+                            photo = {"/finished.png"}
+                            klasa = {"nijeTrSlika"}
+                        />
+                    </div>
+                )}
                 
-                <Tanstack 
+                {finishedData.length > 0 && (<Tanstack 
                     tableData={finishedData} 
                     naslov={<><FontAwesomeIcon icon={faClockRotateLeft} className="me-2" /> Istorija aktivnosti</>} 
                     onSessionCloned={handleClonedSession}
                     onSessionDeleted={handleDeletedSession}
-                />
+                />)}
             </div>
         </div>
     );

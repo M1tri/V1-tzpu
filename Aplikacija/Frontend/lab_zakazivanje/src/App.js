@@ -20,7 +20,6 @@ function App() {
     const [newlyAddedId, setNewlyAddedId] = useState(null);
     const [editSessionId, setEditSessionId] = useState(-1);
     const [manageSessionId, setManageSessionId] = useState(-1);
-    const [finishedSessionId, setFinishedSessionId] = useState(-1);
 
     useEffect(() => {
         async function fetchRooms() {

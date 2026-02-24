@@ -62,6 +62,12 @@ export default function RoomLayout({ selectedRoom, mode, selectedSeatIDs = [], t
                             ${!postoji ? "empty-seat" : ""}
                             ${mode == "sessionManager" && isSelected ? "seat-selected" : ""}
                         `}
+                        style={{
+                        backgroundColor:
+                            mode === "sessionManager" && postoji && celija.seatID != null
+                            ? statusInfo[vrlStatuses[celija.seatID]?.status]?.boja
+                            : undefined
+                        }}
                     >
                         {postoji && (
                             <>
