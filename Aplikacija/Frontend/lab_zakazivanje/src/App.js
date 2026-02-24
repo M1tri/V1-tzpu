@@ -7,6 +7,8 @@ import Form from './Components/Form.js';
 import { ActivityView } from './DTOs/activity.js';
 import SessionManager from './Components/SessionManager.js';
 import LogIn from './Components/LogIn.js';
+import useNotifications from './Components/SchedulerNotificationHook.js';
+import { ConsoleLogger } from '@microsoft/signalr/dist/esm/Utils.js';
 
 function App() {
     const [data, setData] = useState([]);
@@ -50,12 +52,8 @@ function App() {
         fetchRooms();
     }, []);
 
-    useEffect(() => {
 
-        if(!selectedRoom)
-            return;
-
-        async function fetchData() {
+    const fetchData = async function fetchData() {
         try 
         {
             const response = await fetch(`https://localhost:7213/api/sessions/GetSessionsInRoom?roomId=${selectedRoom}`);
@@ -87,8 +85,12 @@ function App() {
         {
             setLoading(false);
         }
-        }
+    }
 
+    useEffect(() => {
+        if(!selectedRoom)
+            return;
+        
         fetchData();
     }, [selectedRoom]);
 
@@ -187,6 +189,20 @@ function App() {
             console.error("Error finished session:", err);
         }
     };
+
+    const HandleNotificationSuccess = (id) => {
+        console.log("stiglooo");
+        console.log(id);
+        if (selectedRoom === id)
+        {
+            fetchData();
+        }
+    }
+    
+    const HandleNotificationFail = (message) => {
+        alert(message);
+    }
+    useNotifications(HandleNotificationSuccess, HandleNotificationFail, selectedRoom);
 
     if (roomsLoading) return <div>Učitavanje prostorija...</div>;
     if (loading) return <div>Učitavanje sesija...</div>;

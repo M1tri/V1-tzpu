@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using LabZakazivanjeAPI.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,27 +43,19 @@ builder.Services.AddHttpClient<IInfrastructureClient, InfrastructureClient>(clie
     client.BaseAddress = new Uri("https://localhost:7213");
 });
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        });
-});
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactDevPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // React dev server
+        policy.WithOrigins("https://localhost:3000") // React dev server
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
+
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -72,11 +65,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("ReactDevPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("AllowAll");
 
 app.MapControllers();
+
+app.MapHub<SessionSchedulerNotificationHub>("/schedulerHub");
+
 app.Run();

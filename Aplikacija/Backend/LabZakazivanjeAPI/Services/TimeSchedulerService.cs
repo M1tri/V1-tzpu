@@ -1,20 +1,32 @@
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Notifications;
+using LabZakazivanjeAPI.Services;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+
+public class SchedulerNotification
+{
+    public bool Success {get; set;}
+    public int? RoomId {get; set;}
+    public string? Message {get; set;}
+}
 
 public class TimeSchedulerService : BackgroundService
 {
     private readonly IServiceScopeFactory m_scopeFactory;
+    private readonly IHubContext<SessionSchedulerNotificationHub> m_hubContext;
 
-    public TimeSchedulerService(IServiceScopeFactory scopeFactory)
+    public TimeSchedulerService(IServiceScopeFactory scopeFactory, IHubContext<SessionSchedulerNotificationHub> hubContext)
     {
         m_scopeFactory = scopeFactory;
+        m_hubContext = hubContext;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
+        var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
@@ -43,13 +55,39 @@ public class TimeSchedulerService : BackgroundService
 
             foreach (var s in sesijeZaTerminate)
             {
+                ServiceResult<string> result;
                 if (s.AutomatskoStanjeZavrsavanja == SessionState.FADING)
                 {
-                    await sessionService.Fade(s.Id);
+                    result = await sessionService.Fade(s.Id);
                 }
                 else
                 {
-                    await sessionService.Terminate(s.Id);
+                    result = await sessionService.Terminate(s.Id);
+                }
+
+                if (result.Success)
+                {
+                    await m_hubContext.Clients.All.SendAsync(
+                        "ReceiveSchedulerNotification",
+                        new SchedulerNotification
+                        {
+                            Success = true,
+                            RoomId = s.RoomId
+                        },
+                        cancellationToken: stoppingToken
+                    );
+                }
+                else
+                {
+                    await m_hubContext.Clients.All.SendAsync(
+                        "ReceiveSchedulerNotification",
+                        new SchedulerNotification
+                        {
+                            Success = false,
+                            Message = result.ErrorMessage
+                        },
+                        cancellationToken: stoppingToken
+                    );
                 }
             }
 
@@ -64,7 +102,32 @@ public class TimeSchedulerService : BackgroundService
 
             foreach (var s in sesijeZaActive)
             {
-                await sessionService.Activate(s.Id);
+                var result = await sessionService.Activate(s.Id);
+
+                if (result.Success)
+                {
+                    await m_hubContext.Clients.All.SendAsync(
+                        "ReceiveSchedulerNotification",
+                        new SchedulerNotification
+                        {
+                            Success = true,
+                            RoomId = s.RoomId
+                        },
+                        cancellationToken: stoppingToken
+                    );
+                }
+                else
+                {
+                    await m_hubContext.Clients.All.SendAsync(
+                        "ReceiveSchedulerNotification",
+                        new SchedulerNotification
+                        {
+                            Success = false,
+                            Message = result.ErrorMessage
+                        },
+                        cancellationToken: stoppingToken
+                    );
+                }
             }
         }
     }

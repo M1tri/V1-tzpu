@@ -86,10 +86,7 @@ public class VLRService : IVLRService
         m_context.ActiveVLRs.Update(vlr);
         await m_context.SaveChangesAsync(); 
 
-        // Ako nema fading sesije ili je u njoj na tom mestu resurs slobodan odma se stavlja u ready
         int? fadingSesija = await m_context.Sessions.Where(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.FADING).Select(s => s.Id).FirstOrDefaultAsync();
-        Console.WriteLine("Fading sesijaaaaaaaa******************");
-        Console.WriteLine(fadingSesija);
         if (fadingSesija == null || !m_context.ActiveVLRs.Where(v => v.SessionId == fadingSesija && v.SeatId == seatId && v.Status == VLRStatus.PROVIDED).Any())
         {
             var seat = Helpers.RoomRasporedParser.GetSeatIps(sesija.Prostorija!.Raspored).FirstOrDefault(seat => seat.Id == seatId && seat.IP != null);

@@ -8,7 +8,7 @@ import LogIn from './Components/LogIn';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <LogIn />
+    <App />
   </React.StrictMode>
 );
 
