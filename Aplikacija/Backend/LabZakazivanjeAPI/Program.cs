@@ -22,6 +22,7 @@ builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlite("Data Source=baza.db"));
 
 builder.Services.AddHostedService<TimeSchedulerService>();
+builder.Services.AddHostedService<DashboardStubService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IVLRService, VLRService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
@@ -33,16 +34,16 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie(options =>
 {
-    options.Cookie.SameSite = SameSiteMode.Lax; // Promeni na Lax ako su i Front i Back na localhostu
+    options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 })
 .AddGoogle(options =>
 {
-    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? ""; 
     options.CallbackPath = "/signin-google";
 })
-.AddJwtBearer(options => // DODAJ OVO
+.AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -52,7 +53,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Kljuc"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Kljuc"] ?? ""))
     };
 });
 
@@ -67,15 +68,17 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
-    // Dozvoljava korelacionim kolačićima da prođu kroz redirect
     options.CheckConsentNeeded = context => false;
     options.MinimumSameSitePolicy = SameSiteMode.Unspecified; 
 });
 
-Console.WriteLine("GOOGLE ID: " + builder.Configuration["Authentication:Google:ClientId"]);
-
 builder.Services.AddAuthorization();
 builder.Services.AddHttpClient<IInfrastructureClient, InfrastructureClient>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7213");
+});
+
+builder.Services.AddHttpClient<IDashboardClient, DashboardClient>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7213");
 });
@@ -84,7 +87,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactDevPolicy", policy =>
     {
-        policy.WithOrigins("https://localhost:3000") // React dev server
+        policy.WithOrigins("https://localhost:3000")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -103,7 +106,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("ReactDevPolicy");
 
-app.UseCookiePolicy(); // <--- DODAJ OVO OVDE
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 app.UseAuthorization();
