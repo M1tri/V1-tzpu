@@ -22,9 +22,19 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
 
     const handleSetNext = async (id) =>
     {
+        const token = localStorage.getItem("jwt");
+        if (!token)
+        {
+            console.log("Nema token!");
+            return;
+        }
+
         const response = await fetch(`https://localhost:7213/api/vlr/PromoteAsNext?sessionId=${id}`,
             {
-                method: "PUT"
+                method: "PUT",
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
         if (!response.ok)
@@ -42,9 +52,19 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
 
     const handleSetPlanned = async (id) =>
     {
+        const token = localStorage.getItem("jwt");
+        if (!token)
+        {
+            console.log("Nema token!");
+            return;
+        }
+
         const response = await fetch(`https://localhost:7213/api/vlr/DemoteToPlanned?sessionId=${id}`,
             {
-                method: "PUT"
+                method: "PUT",
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
         if (!response.ok)
@@ -61,9 +81,19 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
 
     const handleSetActive = async (id) => 
     {
+        const token = localStorage.getItem("jwt");
+        if (!token)
+        {
+            console.log("Nema token!");
+            return;
+        }
+
         const response = await fetch(`https://localhost:7213/api/vlr/Activate?sessionId=${id}`,
             {
-                method: "PUT"
+                method: "PUT",
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
         if (!response.ok)
@@ -84,11 +114,21 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
         setMode("sessionManager");
     }
 
-    const handleClonedSession = async (id) => {
-        
+    const handleClonedSession = async (id) => 
+    {
+        const token = localStorage.getItem("jwt");
+        if (!token)
+        {
+            console.log("Nema token!");
+            return;
+        }
+
         const response = await fetch(`https://localhost:7213/api/sessions/CloneSession?sessionId=${id}`,
             {
-                method: "POST"
+                method: "POST", 
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
         if (!response.ok)
@@ -122,9 +162,19 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
         );
         if (!confirmDelete) return;
 
+        const token = localStorage.getItem("jwt");
+        if (!token)
+        {
+            console.log("Nema token!");
+            return;
+        }
+
         const response = await fetch(`https://localhost:7213/api/sessions/DeleteSession?sessionId=${id}`,
             {
-                method: "DELETE"
+                method: "DELETE", 
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
         if (!response.ok)

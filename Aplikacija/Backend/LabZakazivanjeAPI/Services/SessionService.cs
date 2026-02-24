@@ -168,7 +168,7 @@ public class SessionService : ISessionService
         .FirstOrDefaultAsync(s => s.Id == sessionId);
 
         if (sesija == null)
-            return ServiceResult<ViewSessionDTO>.Error("Nepostojeca sesija lol!");
+            return ServiceResult<ViewSessionDTO>.Error("Nepostojeca sesija!");
 
         Session s = new Session
         {
@@ -217,7 +217,7 @@ public class SessionService : ISessionService
         m_context.Sessions.Remove(sesija);
         await m_context.SaveChangesAsync();
 
-        return ServiceResult<string>.Ok("Uspesnooo");
+        return ServiceResult<string>.Ok("Uspesno");
     }
 
     public async Task<ServiceResult<ViewSessionDTO>> EditSession(UpdateSessionDTO s)
@@ -352,7 +352,7 @@ public class SessionService : ISessionService
 
         if (m_context.Sessions.Where(s => s.RoomId == room.Id && s.Stanje == SessionState.NEXT).Any())
         {
-            return ServiceResult<string>.Error("U datoj sobi vec postoji Next session");
+            return ServiceResult<string>.Error("U ovoj prostoriji već postoji NEXT sesija!");
         }
 
         Activity activity = s.Aktivnost!;
@@ -409,7 +409,7 @@ public class SessionService : ISessionService
         if (m_context.Sessions
             .Where(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.ACTIVE).Any())
         {
-            return ServiceResult<string>.Error("U toj prostoriji vec postoji aktivna sesija!");
+            return ServiceResult<string>.Error("U ovoj prostoriji već postoji ACTIVE sesija!");
         }
 
         var result = await GetSessionResourceStatus(sesija.Id);
@@ -420,7 +420,7 @@ public class SessionService : ISessionService
         }
         else
         {
-            return ServiceResult<string>.Error("Greska pri nabavljanju statsua mesta");
+            return ServiceResult<string>.Error("Greska pri nabavljanju statusa mesta");
         }
 
         foreach (var seatId in seatStatuses.Keys)
@@ -447,10 +447,10 @@ public class SessionService : ISessionService
             return ServiceResult<string>.Error("Ne postoji sesija sa tim ID-em");
         
         if (sesija.Stanje != SessionState.ACTIVE)
-            return ServiceResult<string>.Error("Sesija mora biti u stanju ACTIVE da bi presala u FADING");
+            return ServiceResult<string>.Error("Sesija mora biti u stanju ACTIVE da bi presala u FADING!");
 
         if (m_context.Sessions.Where(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.FADING).Any())
-            return ServiceResult<string>.Error("U prostoriji vec postoji FADING sesija.");
+            return ServiceResult<string>.Error("U ovoj prostoriji već postoji FADING sesija!");
     
         sesija.Stanje = SessionState.FADING;
 
@@ -484,7 +484,7 @@ public class SessionService : ISessionService
             return ServiceResult<string>.Error("Ne postoji sesija sa tim ID-em");
         
         if (sesija.Stanje != SessionState.ACTIVE && sesija.Stanje != SessionState.FADING)
-            return ServiceResult<string>.Error("Sesija mora biti u stanju ACTIVE/FADING da bi presala u Terminated");
+            return ServiceResult<string>.Error("Sesija mora biti u stanju ACTIVE/FADING da bi prešla u FINISHED!");
     
         sesija.Stanje = SessionState.FINISHED;
 

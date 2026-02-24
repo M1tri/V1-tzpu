@@ -28,7 +28,7 @@ function App() {
                 const token = localStorage.getItem("jwt");
                 if (!token)
                 {
-                    console.log("Nema token aaaaaaaaaaaaaaaaa!");
+                    console.log("Nema token!");
                     return;
                 }
 
@@ -69,7 +69,22 @@ function App() {
     const fetchData = async function fetchData() {
         try 
         {
-            const response = await fetch(`https://localhost:7213/api/sessions/GetSessionsInRoom?roomId=${selectedRoom}`);
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
+                return;
+            }
+
+            const response = await fetch(`https://localhost:7213/api/sessions/GetSessionsInRoom?roomId=${selectedRoom}`, 
+                {
+                    method : "GET",
+                    headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
+                }
+            );
+
             if (!response.ok) 
             {
                 throw new Error("Greska pri ucitavanju sesija.");
@@ -110,7 +125,22 @@ function App() {
     useEffect(() => {
         async function fetchActivities() {
             try {
-                const res = await fetch("https://localhost:7213/api/activities/GetActivities");
+                const token = localStorage.getItem("jwt");
+                if (!token)
+                {
+                    console.log("Nema token!");
+                    return;
+                }
+
+                const res = await fetch("https://localhost:7213/api/activities/GetActivities", 
+                    {
+                         method : "GET",
+                        headers: {
+                            "Authorization" : "Bearer " + token,
+                        }
+                    }
+                );
+
                 if (!res.ok) 
                     throw new Error("Greska pri ucitavanju aktivnosti");
 
@@ -154,8 +184,18 @@ function App() {
 
     const handleSetFading = async (id) => {
         try {
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
+                return;
+            }
+
             const response = await fetch(`https://localhost:7213/api/vlr/Fade?sessionId=${id}`, {
-                method: "PUT"
+                method: "PUT", 
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
             if (!response.ok) {
@@ -179,8 +219,18 @@ function App() {
 
     const handleSetFinished = async (id) => {
         try {
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
+                return;
+            }
+
             const response = await fetch(`https://localhost:7213/api/vlr/Terminate?sessionId=${id}`, {
-                method: "PUT"
+                method: "PUT", 
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
             if (!response.ok) {

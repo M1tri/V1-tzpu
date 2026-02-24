@@ -79,10 +79,19 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                     automatskoKrajnjeStanje: autoEnd === "yes" ? Number(autoState) : 0
                 };
 
+                const token = localStorage.getItem("jwt");
+                if (!token)
+                {
+                    console.log("Nema token!");
+                    return;
+                }
+
                 response = await fetch("https://localhost:7213/api/sessions/AddSession", 
                 {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "application/json",
+                        "Authorization" : "Bearer " + token
+                     },
                     body: JSON.stringify(data)
                 });
             }
@@ -103,10 +112,19 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
 
                 console.log(data);
 
+                const token = localStorage.getItem("jwt");
+                if (!token)
+                {
+                    console.log("Nema token!");
+                    return;
+                }
+
                 response = await fetch("https://localhost:7213/api/sessions/EditSession", 
                 {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "application/json", 
+                        "Authorization" : "Bearer " + token
+                     },
                     body: JSON.stringify(data)
                 });
 
@@ -140,7 +158,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
         catch (err) 
         {
             console.error(err);
-            alert("Doslo je do greske prilikom cuvanja sesije.");
+            alert("Došlo je do greške prilikom čuvanja sesije.");
         }
     };
 
@@ -160,10 +178,19 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                 automatskoKrajnjeStanje: autoEnd === "yes" ? Number(autoState) : 0
             };
 
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
+                return;
+            }
+
             const response = await fetch("https://localhost:7213/api/sessions/AddSession", 
             {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", 
+                    "Authorization" : "Bearer " + token
+                 },
                 body: JSON.stringify(data)
             });
 
@@ -196,7 +223,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
         catch (err) 
         {
             console.error(err);
-            alert("Doslo je do greske prilikom kloniranja sesije.");
+            alert("Došlo je do greške prilikom kloniranja sesije.");
         }
     }
 
@@ -208,10 +235,20 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
         if (!confirmDelete) return;
 
         try {
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
+                return;
+            }
+
             const response = await fetch(
                 `https://localhost:7213/api/sessions/DeleteSession?sessionId=${editSessionData.id}`,
                 {
                     method: "DELETE",
+                    headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
                 }
             );
 
@@ -225,7 +262,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
 
         } catch (err) {
             console.error(err);
-            alert("Doslo je do greske prilikom brisanja sesije.");
+            alert("Došlo je do greške prilikom brisanja sesije.");
         }
     };
 

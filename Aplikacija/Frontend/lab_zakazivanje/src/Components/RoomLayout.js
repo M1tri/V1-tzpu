@@ -10,7 +10,21 @@ export default function RoomLayout({ selectedRoom, mode, selectedSeatIDs = [], t
     useEffect(() => {
         async function fetchAllInfo() {
             try {
-                const res = await fetch(`https://localhost:7213/api/vlr/GetAllInfo`);
+                
+                const token = localStorage.getItem("jwt");
+                if (!token)
+                {
+                    console.log("Nema token!");
+                    return;
+                }
+
+                const res = await fetch(`https://localhost:7213/api/vlr/GetAllInfo`, {
+                    method : "GET",
+                    headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
+                });
+                
                 if (!res.ok) 
                     throw new Error("Greska pri ucitavanju statusa");
 

@@ -71,12 +71,12 @@ public class VLRService : IVLRService
         .FirstOrDefaultAsync();
 
         if (vlr == null)
-            return ServiceResult<ActiveVLR>.Error("Ne postoji slobodan VLR za taj seat");
+            return ServiceResult<ActiveVLR>.Error($"Mesto {seatId}: Ne postoji slobodan resurs za ovo mesto.");
         
         var infrastructureResponse = await m_infrastructureClient.PrepareVM(vlr.VLRID, sesija.RoomId, seatId);
 
         if (!infrastructureResponse)
-            return ServiceResult<ActiveVLR>.Error("Greska u infrastrukturi pri prripremi resursa");
+            return ServiceResult<ActiveVLR>.Error("Greska u infrastrukturi pri pripremi resursa");
 
         vlr.RoomId = roomId;
         vlr.SeatId = seatId;
@@ -152,7 +152,7 @@ public class VLRService : IVLRService
         var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.SeatId == seatId && v.Status == VLRStatus.READY);
 
         if (vlr == null)
-            return ServiceResult<ActiveVLR>.Error("Ne postoji spreman VLR u toj sesisji!");
+            return ServiceResult<ActiveVLR>.Error($"Mesto {seatId}: Ne postoji spreman resurs za ovo mesto.");
 
         vlr.Status = VLRStatus.PROVIDED;
         vlr.UserId = userId;
@@ -174,7 +174,7 @@ public class VLRService : IVLRService
         var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.SeatId == seatId && v.UserId == userId);
 
         if (vlr == null)
-            return ServiceResult<ActiveVLR>.Error("Ne postoji VLR sa taj userId u toj sesisji!");
+            return ServiceResult<ActiveVLR>.Error($"Mesto {seatId}: Ne postoji dodeljen resurs za ovo mesto.");
 
         if (sesija.Stanje == SessionState.FADING)
         {
@@ -223,7 +223,7 @@ public class VLRService : IVLRService
 
         var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.SeatId == seatId);
         if (vlr == null)
-            return ServiceResult<ActiveVLR>.Error("Ne postoji vlr na taj seat");
+            return ServiceResult<ActiveVLR>.Error($"Mesto {seatId}: Ne postoji resurs na ovom mestu.");
         
 
         // TODO PREPRAVI DA LEPSE BUDE A NE COPYPASTE

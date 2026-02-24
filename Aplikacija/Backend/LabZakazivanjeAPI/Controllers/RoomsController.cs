@@ -35,6 +35,22 @@ public class RoomsController : ControllerBase
         }
     }
 
+    [HttpGet("GetRoom")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<ActionResult<ViewRoomDTO>> GetRoom([FromQuery] int roomId)
+    {
+        var room = await m_roomsService.GetRoom(roomId);
+
+        if (room.Success)
+        {
+            return Ok(room.Data);
+        }
+        else
+        {
+            return BadRequest(room.ErrorMessage);
+        }
+    }
+
     [HttpPost("AddRoom")]
     public async Task<ActionResult<ViewRoomDTO>> AddRoom([FromBody] CreateRoomDTO r)
     {

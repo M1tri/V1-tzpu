@@ -36,7 +36,23 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
     useEffect(() => {
         async function fetchStatuses() {
             try {
-                const res = await fetch(`https://localhost:7213/api/sessions/GetSessionResourceStatus?sessionId=${session.id}`);
+                
+                const token = localStorage.getItem("jwt");
+                if (!token)
+                {
+                    console.log("Nema token!");
+                    return;
+                }
+
+                const res = await fetch(`https://localhost:7213/api/sessions/GetSessionResourceStatus?sessionId=${session.id}`,
+                    {
+                        method : "GET",
+                        headers: {
+                            "Authorization" : "Bearer " + token,
+                        }
+                    }
+                );
+
                 if (!res.ok) 
                     throw new Error("Greska pri ucitavanju statusa");
 
@@ -65,16 +81,26 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
         for (const seatId of selectedSeatIDs) {
             if (VLRStatuses[seatId].status != "null")
             {
-                alert(`Mesto ${seatId}: Ova radnja primenjiva je samo na NULL resurse`);
+                alert(`Mesto ${seatId}: Ova radnja primenjiva je samo na uništene resurse!`);
                 return;
             }
 
             const user = freeUserId;
             setFreeUserId(freeUserId + 1);
 
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
+                return;
+            }
+
             const response = await fetch(`https://localhost:7213/api/vlr/Prepare?sessionId=${session.id}&seatId=${seatId}&roomId=${room.id}`,
             {
-                method: "PUT"
+                method: "PUT",
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
             if (!response.ok)
@@ -102,9 +128,19 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
             const user = freeUserId;
             setFreeUserId(freeUserId + 1);
 
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
+                return;
+            }
+
             const response = await fetch(`https://localhost:7213/api/vlr/Provide?sessionId=${session.id}&seatId=${seatId}&userId=${user}`,
             {
-                method: "PUT"
+                method: "PUT", 
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
             if (!response.ok)
@@ -139,9 +175,19 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                 continue;
             }
 
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
+                return;
+            }
+
             const response = await fetch(`https://localhost:7213/api/vlr/Release?sessionId=${session.id}&seatId=${seatId}&userId=${user}`,
             {
-                method: "PUT"
+                method: "PUT", 
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
             if (!response.ok)
@@ -168,13 +214,23 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
         for (const seatId of selectedSeatIDs) {
             if (VLRStatuses[seatId].status == "null")
             {
-                alert(`Mesto ${seatId}: Ova radnja nije primenjiva na NULL resurse`);
+                alert(`Mesto ${seatId}: Ova radnja nije primenjiva na uništene resurse.`);
+                return;
+            }
+
+            const token = localStorage.getItem("jwt");
+            if (!token)
+            {
+                console.log("Nema token!");
                 return;
             }
 
             const response = await fetch(`https://localhost:7213/api/vlr/Kill?sessionId=${session.id}&seatId=${seatId}`,
             {
-                method: "PUT"
+                method: "PUT", 
+                headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
             });
 
             if (!response.ok)

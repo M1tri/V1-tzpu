@@ -8,5 +8,6 @@ namespace LabZakazivanjeAPI.Services.Interfaces;
 public interface IRoomsService
 {
     Task<ServiceResult<IEnumerable<ViewRoomDTO>>> GetRooms();
+    Task<ServiceResult<ViewRoomDTO>> GetRoom(int roomId);
     Task<ServiceResult<ViewRoomDTO>> AddRooms(CreateRoomDTO r);
 }

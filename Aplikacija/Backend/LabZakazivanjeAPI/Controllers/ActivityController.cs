@@ -32,6 +32,21 @@ public class ActivityController : ControllerBase
         }
     }
 
+    [HttpGet("AddActivity")]
+    public async Task<ActionResult<IEnumerable<ViewActivityDTO>>> GetActivities([FromQuery] int activityId)
+    {
+        var activity = await m_activityService.GetActivity(activityId);
+
+        if (activity.Success)
+        {
+            return Ok(activity.Data);
+        }
+        else
+        {
+            return BadRequest(activity.ErrorMessage);
+        }
+    }
+
     [HttpPost("AddActivity")]
     public async Task<ActionResult<ViewActivityDTO>> AddActivity([FromBody] CreateActivityDTO a)
     {

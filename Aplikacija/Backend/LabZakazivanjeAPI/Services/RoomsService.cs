@@ -38,6 +38,24 @@ public class RoomsService : IRoomsService
         return ServiceResult<IEnumerable<ViewRoomDTO>>.Ok(roomViews);
     }
 
+    public async Task<ServiceResult<ViewRoomDTO>> GetRoom(int roomId)
+    {
+        var room = await m_context.Rooms.FirstOrDefaultAsync(r => r.Id == roomId);
+
+        if (room == null)
+            return ServiceResult<ViewRoomDTO>.Error("Ne postoji soba");
+
+        ViewRoomDTO view = new ViewRoomDTO
+        {
+            Id = room.Id,
+            Naziv = room.Naziv,
+            Capacity = room.Capacity,
+            Raspored = RoomRasporedParser.ParseRaspored(room.Raspored)
+        };
+
+        return ServiceResult<ViewRoomDTO>.Ok(view);
+    }
+
     public async Task<ServiceResult<ViewRoomDTO>> AddRooms(CreateRoomDTO r)
     {
         Room room = new Room

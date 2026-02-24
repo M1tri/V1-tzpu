@@ -261,20 +261,8 @@ export default function Tanstack({tableData, naslov, enableFeatures = true,
 
     const cloneFinishedSession = async (id) =>
     {
-        //fetch za clone
-
-        const finishedSession = tableData.find(s => s.id == id);
-        const clonedSession = new SessionView(finishedSession.id + 1000, finishedSession.naziv, finishedSession.tip,
-            finishedSession.datum, finishedSession.vremePoc, finishedSession.vremeKraja, 
-            0, finishedSession.autoStart, finishedSession.autoEnd, finishedSession.autoState);
-
-        console.log(finishedSession);
-        console.log(clonedSession);
-
         onSessionCloned(id);
     }
-
-    
 
     return (
         <div className="container mt-4 tabelaDiv">

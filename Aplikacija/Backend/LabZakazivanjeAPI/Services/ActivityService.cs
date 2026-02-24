@@ -40,6 +40,24 @@ public class ActivityService: IActivityService
         return ServiceResult<IEnumerable<ViewActivityDTO>>.Ok(views);
     }
 
+    public async Task<ServiceResult<ViewActivityDTO>> GetActivity(int activityId)
+    {
+        var act = await m_context.Activities.FirstOrDefaultAsync(a => a.Id == activityId);
+
+        if (act == null)
+            return ServiceResult<ViewActivityDTO>.Error("Ne postoji activity");
+
+        ViewActivityDTO view = new ViewActivityDTO
+        {
+            Id = act.Id,
+            Tip = act.Tip!.Naziv,
+            Naziv = act.Name,
+            VLRIDs = act.VLRIDS
+        };
+
+        return ServiceResult<ViewActivityDTO>.Ok(view);
+    }
+
     public async Task<ServiceResult<ViewActivityDTO>> AddActivity(CreateActivityDTO a)
     {
         var tip = await m_context.ActivityClasses.FirstOrDefaultAsync(t => t.Id == a.ActivityClassId);
