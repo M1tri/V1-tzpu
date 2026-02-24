@@ -23,6 +23,9 @@ public class AuthController : ControllerBase
     [HttpGet("authenticate-google")]
     public IActionResult AuthenticateGoogle()
     {
+        Console.WriteLine("***********************");
+        Console.WriteLine(Url.Action("GoogleCallBack"));
+
         var props = new AuthenticationProperties
         {
             RedirectUri = Url.Action("GoogleCallback")

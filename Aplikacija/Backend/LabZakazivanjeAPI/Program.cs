@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using LabZakazivanjeAPI.Notifications;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,12 +31,45 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
 })
-.AddCookie()
+.AddCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.Lax; // Promeni na Lax ako su i Front i Back na localhostu
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+})
 .AddGoogle(options =>
 {
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-    options.CallbackPath = "/api/auth/google-callback";
+    options.CallbackPath = "/signin-google";
+})
+.AddJwtBearer(options => // DODAJ OVO
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Kljuc"]))
+    };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    var defaultAuthorizationPolicyBuilder = new AuthorizationPolicyBuilder(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        JwtBearerDefaults.AuthenticationScheme);
+    defaultAuthorizationPolicyBuilder = defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
+    options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+});;
+
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    // Dozvoljava korelacionim kolačićima da prođu kroz redirect
+    options.CheckConsentNeeded = context => false;
+    options.MinimumSameSitePolicy = SameSiteMode.Unspecified; 
 });
 
 Console.WriteLine("GOOGLE ID: " + builder.Configuration["Authentication:Google:ClientId"]);
@@ -42,7 +79,6 @@ builder.Services.AddHttpClient<IInfrastructureClient, InfrastructureClient>(clie
 {
     client.BaseAddress = new Uri("https://localhost:7213");
 });
-
 
 builder.Services.AddCors(options =>
 {
@@ -67,6 +103,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("ReactDevPolicy");
 
+app.UseCookiePolicy(); // <--- DODAJ OVO OVDE
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -76,3 +114,5 @@ app.MapControllers();
 app.MapHub<SessionSchedulerNotificationHub>("/schedulerHub");
 
 app.Run();
+
+public partial class Program { }

@@ -25,10 +25,24 @@ function App() {
     useEffect(() => {
         async function fetchRooms() {
             try {
-                const res = await fetch("https://localhost:7213/api/rooms/GetRooms");
-                if (!res.ok) 
-                    throw new Error("Greska pri ucitavanju prostorija");
+                const token = localStorage.getItem("jwt");
+                if (!token)
+                {
+                    console.log("Nema token aaaaaaaaaaaaaaaaa!");
+                    return;
+                }
 
+                const res = await fetch("https://localhost:7213/api/rooms/GetRooms", {
+                    method : "GET",
+                    headers: {
+                        "Authorization" : "Bearer " + token,
+                    }
+                });
+                if (!res.ok) 
+                {
+                    console.log(await res.text());
+                    throw new Error("Greska pri ucitavanju prostorija");
+                }
                 const json = await res.json();
 
                 const loadedRooms = json.map(r => new RoomView(r.id, r.naziv, r.capacity, r.raspored));

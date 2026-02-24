@@ -3,6 +3,8 @@ namespace LabZakazivanjeAPI.Controllers;
 using LabZakazivanjeAPI.Models;
 using LabZakazivanjeAPI.Models.DTOs;
 using LabZakazivanjeAPI.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +20,7 @@ public class RoomsController : ControllerBase
     }
 
     [HttpGet("GetRooms")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<ActionResult<IEnumerable<ViewRoomDTO>>> GetRooms()
     {
         var rooms = await m_roomsService.GetRooms();
