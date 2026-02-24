@@ -36,7 +36,6 @@ public class RoomsController : ControllerBase
     }
 
     [HttpGet("GetRoom")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<ActionResult<ViewRoomDTO>> GetRoom([FromQuery] int roomId)
     {
         var room = await m_roomsService.GetRoom(roomId);

@@ -294,7 +294,12 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                         {session.autoEnd && (
                             <>
                                 <label>Prelazi u stanje:</label>
-                                <label className="infoLabel">{session.autoState === 3 ? "FADING" : "FINISHED"}</label>
+                                <label 
+                                    className="infoLabel"
+                                    style={{ color: session.autoState === 3 ? "#f29fa5" : "#828282" }}
+                                >
+                                {session.autoState === 3 ? "FADING" : "FINISHED"}    
+                                </label>
                             </>
                         )}
                     </div> 

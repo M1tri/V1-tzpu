@@ -22,10 +22,10 @@ export default function LogIn()
         const params = new URLSearchParams(window.location.search);
         const neWtoken = params.get("token");
 
-        if (token)
+        if (neWtoken)
         {
             localStorage.setItem("jwt", token);
-            console.log("Imam tokena lmfao lol");
+            console.log("Ima tokena");
             window.history.replaceState({}, document.title, window.location.pathname);
             setIsLoggedIn(true);
         }

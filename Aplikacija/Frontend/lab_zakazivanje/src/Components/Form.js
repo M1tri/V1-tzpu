@@ -268,7 +268,8 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
 
     return (
         <div className="formaWrapper">
-            <h1>Dodavanje nove sesije - Prostorija {selectedRoom.label}</h1>
+            {!editMode && <h1>Dodavanje nove sesije - Prostorija {selectedRoom.label}</h1>}
+            {editMode && <h1>Izmena sesije - Prostorija {selectedRoom.label}</h1>}
             <div className="formaDiv">
                 <div className="formaLeftDiv">
                     <div className="formaLeft">
