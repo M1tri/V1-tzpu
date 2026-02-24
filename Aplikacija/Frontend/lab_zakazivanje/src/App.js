@@ -8,7 +8,6 @@ import { ActivityView } from './DTOs/activity.js';
 import SessionManager from './Components/SessionManager.js';
 import LogIn from './Components/LogIn.js';
 import useNotifications from './Components/SchedulerNotificationHook.js';
-import { ConsoleLogger } from '@microsoft/signalr/dist/esm/Utils.js';
 
 function App() {
     const [data, setData] = useState([]);
