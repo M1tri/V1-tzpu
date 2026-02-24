@@ -95,6 +95,21 @@ public class VLRController : ControllerBase
         }        
     }
 
+    [HttpPut("Prepare")]
+    public async Task<ActionResult> Prepare([FromQuery] int sessionId, [FromQuery] int seatId, [FromQuery] int roomId)
+    {
+        var result = await m_vlrService.PrepareVLR(sessionId, seatId, roomId);
+
+        if (result.Success)
+        {
+            return Ok(result.Data);
+        }
+        else
+        {
+            return BadRequest(result.ErrorMessage);
+        }        
+    }
+
     [HttpPut("Provide")]
     public async Task<ActionResult> Provide([FromQuery] int sessionId, [FromQuery] int seatId, [FromQuery] int userId)
     {
@@ -111,9 +126,24 @@ public class VLRController : ControllerBase
     }
 
     [HttpPut("Release")]
-    public async Task<ActionResult> Release([FromQuery] int sessionId, [FromQuery] int userId)
+    public async Task<ActionResult> Release([FromQuery] int sessionId, [FromQuery] int seatId, [FromQuery] int userId)
     {
-        var result = await m_vlrService.ReleaseVLR(sessionId, userId);
+        var result = await m_vlrService.ReleaseVLR(sessionId, seatId, userId);
+
+        if (result.Success)
+        {
+            return Ok(result.Data);
+        }
+        else
+        {
+            return BadRequest(result.ErrorMessage);
+        }        
+    }
+
+    [HttpPut("Kill")]
+    public async Task<ActionResult> Kill([FromQuery] int sessionId, [FromQuery] int seatId)
+    {
+        var result = await m_vlrService.KillVLR(sessionId, seatId);
 
         if (result.Success)
         {

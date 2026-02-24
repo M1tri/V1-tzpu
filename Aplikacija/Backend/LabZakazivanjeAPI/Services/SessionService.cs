@@ -425,45 +425,14 @@ public class SessionService : ISessionService
 
         foreach (var seatId in seatStatuses.Keys)
         {
-            var res = await m_vlrService.PrepareVLR(sesija.Id, seatId);
+            var res = await m_vlrService.PrepareVLR(sesija.Id, seatId, sesija.RoomId);
             if (!res.Success)
                 Console.WriteLine($"Neuspeh za seatId {seatId} : {res.ErrorMessage}");
         }
 
-        var fadingSession = await m_context.Sessions
-        .FirstOrDefaultAsync(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.FADING);
-
-        var seatIps = RoomRasporedParser.GetSeatIps(sesija.Prostorija!.Raspored);
-
-        if (fadingSession == null)
-        {
-            foreach (var seat in seatIps)
-            {
-                await m_vlrService.ReadyVLR(sessionId, seat.Id!.Value, seat.IP!);
-            }
-        }
-        else
-        {
-            result = await GetSessionResourceStatus(fadingSession.Id);
-            Dictionary<int, ResourceInfo> fadingSeasonSetIps;
-
-            if(result.Success)
-                fadingSeasonSetIps = result.Data!;
-            else
-                return ServiceResult<string>.Error("Greska pri nabavljanju statsua mesta");
-
-            foreach (var seat in seatIps)
-            {
-                if (fadingSeasonSetIps.TryGetValue(seat.Id!.Value, out ResourceInfo? value) && value.VlrStatus == VLRStatus.PROVIDED)
-                    continue;
-                await m_vlrService.ReadyVLR(sessionId, seat.Id.Value, seat.IP!);
-            }
-        }
-        
         sesija.Stanje = SessionState.ACTIVE;
         m_context.Sessions.Update(sesija);
         await m_context.SaveChangesAsync();
-
         return ServiceResult<string>.Ok("Dodeljeno");
     }
 
@@ -490,7 +459,7 @@ public class SessionService : ISessionService
         var nonProvidedVlrs = await m_context.ActiveVLRs
         .Where(
             v => v.SessionId == sessionId && (
-            v.Status == VLRStatus.READY || v.Status == VLRStatus.IN_PREPERATION
+            v.Status != VLRStatus.PROVIDED && v.Status != VLRStatus.NULL
         )).ToListAsync();
 
         foreach (var vlr in nonProvidedVlrs)
@@ -532,6 +501,10 @@ public class SessionService : ISessionService
             // TODO ERROR CHECKING
             await m_vlrService.KillVLR(sessionId, vlr.SeatId!.Value);
         }
+
+        var allVlrs = await m_context.ActiveVLRs.Where(v => v.SessionId == sessionId).ToListAsync();
+        foreach (var v in allVlrs)
+            m_context.ActiveVLRs.Remove(v);
 
         await m_context.SaveChangesAsync();
 

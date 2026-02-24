@@ -62,7 +62,37 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
     }, []);
 
     const PrepareResources = async () => {
+        for (const seatId of selectedSeatIDs) {
+            if (VLRStatuses[seatId].status != "null")
+            {
+                alert(`Mesto ${seatId}: Ova radnja primenjiva je samo na NULL resurse`);
+                return;
+            }
 
+            const user = freeUserId;
+            setFreeUserId(freeUserId + 1);
+
+            const response = await fetch(`https://localhost:7213/api/vlr/Prepare?sessionId=${session.id}&seatId=${seatId}&roomId=${room.id}`,
+            {
+                method: "PUT"
+            });
+
+            if (!response.ok)
+            {
+                alert(await response.text());
+                continue;
+            }
+            
+            const data = await response.json();
+            console.log(data);
+
+            setVLRStatuses(prev => {
+                const updated = { ...prev };
+                updated[seatId].status = data.status;
+                updated[seatId].userId = null;
+                return updated;
+            });
+        }
     }
 
     const ProvideResources = async () => {
@@ -80,17 +110,16 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                 alert(await response.text());
                 continue;
             }
-            
-            setVLRStatuses(prev => {
-                const updated = { ...prev };
-                updated[seatId].status = "provided";
-                updated[seatId].userId = user;
-                return updated;
-            });
-
 
             const data = await response.json();
             console.log(data);
+            
+            setVLRStatuses(prev => {
+                const updated = { ...prev };
+                updated[seatId].status = data.status;
+                updated[seatId].userId = user;
+                return updated;
+            });
         }
     }
 
@@ -117,20 +146,47 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                 continue;
             }
 
+            const data = await response.json();
+            console.log(data);
+
             setVLRStatuses(prev => {
                 const updated = { ...prev };
-                updated[seatId].status = "released";
+                updated[seatId].status = data.status;
                 updated[seatId].userId = null;
                 return updated;
             });
-
-            const data = await response.json();
-            console.log(data);
         }
     }
 
     const KillResources = async () => {
+        for (const seatId of selectedSeatIDs) {
+            if (VLRStatuses[seatId].status == "null")
+            {
+                alert(`Mesto ${seatId}: Ova radnja nije primenjiva na NULL resurse`);
+                return;
+            }
 
+            const response = await fetch(`https://localhost:7213/api/vlr/Kill?sessionId=${session.id}&seatId=${seatId}`,
+            {
+                method: "PUT"
+            });
+
+            if (!response.ok)
+            {
+                alert(await response.text());
+                continue;
+            }
+            
+            const data = await response.json();
+            console.log(data);
+
+            setVLRStatuses(prev => {
+                const updated = { ...prev };
+                updated[seatId].status = data.status;
+                updated[seatId].userId = null;
+                return updated;
+            });
+        }
     }
 
     if (VLRStatusesLoading) return <div>Učitavanje statusa...</div>;

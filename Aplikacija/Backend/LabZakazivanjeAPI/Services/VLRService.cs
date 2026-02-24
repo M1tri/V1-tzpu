@@ -1,3 +1,4 @@
+using System.Runtime.Intrinsics.X86;
 using LabZakazivanjeAPI.Clients;
 using LabZakazivanjeAPI.Clients.Interfaces;
 using LabZakazivanjeAPI.Models;
@@ -58,53 +59,78 @@ public class VLRService : IVLRService
         return ServiceResult<string>.Ok("Uspesno kreirani IDLE VLR-ovi");
     }
 
-    public async Task<ServiceResult<string>> PrepareVLR(int sessionId, int seatId)
+    public async Task<ServiceResult<ActiveVLR>> PrepareVLR(int sessionId, int seatId, int roomId)
     {
-        var sesija = await m_context.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId);
+        var sesija = await m_context.Sessions.Include(s=>s.Prostorija).FirstOrDefaultAsync(s => s.Id == sessionId);
         
         if (sesija == null)
-            return ServiceResult<string>.Error("Ne postoji sesija s id");
+            return ServiceResult<ActiveVLR>.Error("Ne postoji sesija s id");
 
         var vlr = await m_context.ActiveVLRs.
-        Where(v => v.SessionId == sessionId && v.Status == VLRStatus.GENERATED_IDLE)
+        Where(v => v.SessionId == sessionId && (v.Status == VLRStatus.GENERATED_IDLE || v.SeatId == seatId))
         .FirstOrDefaultAsync();
 
         if (vlr == null)
-            return ServiceResult<string>.Error("Ne postoji slobodan VLR za taj seat");
+            return ServiceResult<ActiveVLR>.Error("Ne postoji slobodan VLR za taj seat");
         
         var infrastructureResponse = await m_infrastructureClient.PrepareVM(vlr.VLRID, sesija.RoomId, seatId);
 
         if (!infrastructureResponse)
-            return ServiceResult<string>.Error("Greska u infrastrukturi pri prripremi resursa");
+            return ServiceResult<ActiveVLR>.Error("Greska u infrastrukturi pri prripremi resursa");
 
+        vlr.RoomId = roomId;
         vlr.SeatId = seatId;
         vlr.Status = VLRStatus.IN_PREPERATION;
         vlr.LastStatusChange = DateTime.Now;
 
         m_context.ActiveVLRs.Update(vlr);
-        await m_context.SaveChangesAsync();
+        await m_context.SaveChangesAsync(); 
 
-        return ServiceResult<string>.Ok($"Dodeljen vlr uspesno");
+        // Ako nema fading sesije ili je u njoj na tom mestu resurs slobodan odma se stavlja u ready
+        int? fadingSesija = await m_context.Sessions.Where(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.FADING).Select(s => s.Id).FirstOrDefaultAsync();
+        Console.WriteLine("Fading sesijaaaaaaaa******************");
+        Console.WriteLine(fadingSesija);
+        if (fadingSesija == null || !m_context.ActiveVLRs.Where(v => v.SessionId == fadingSesija && v.SeatId == seatId && v.Status == VLRStatus.PROVIDED).Any())
+        {
+            var seat = Helpers.RoomRasporedParser.GetSeatIps(sesija.Prostorija!.Raspored).FirstOrDefault(seat => seat.Id == seatId && seat.IP != null);
+            if (seat == null)
+            {
+                return ServiceResult<ActiveVLR>.Error("Nevalidan seatId");
+            }
+            Console.WriteLine(seat.IP!);
+            var response = await ReadyVLR(sessionId, seatId, seat.IP!);
+
+            if (response.Success)
+            {
+                vlr = response.Data!;
+            }
+            else
+            {
+                return ServiceResult<ActiveVLR>.Error("Greska pri pripremi resursa");
+            }
+        }
+
+        return ServiceResult<ActiveVLR>.Ok(vlr);
     }
 
-    public async Task<ServiceResult<string>> ReadyVLR(int sessionId, int seatId, string ip)
+    public async Task<ServiceResult<ActiveVLR>> ReadyVLR(int sessionId, int seatId, string ip)
     {
         var sesija = await m_context.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId);
         
         if (sesija == null)
-            return ServiceResult<string>.Error("Ne postoji sesija s id");
+            return ServiceResult<ActiveVLR>.Error("Ne postoji sesija s id");
 
         var vlr = await m_context.ActiveVLRs.
         Where(v => v.SessionId == sessionId && v.Status == VLRStatus.IN_PREPERATION && v.SeatId == seatId)
         .FirstOrDefaultAsync();
 
         if (vlr == null)
-            return ServiceResult<string>.Error("Ne postoji VLR u pripremi za taj seat");
+            return ServiceResult<ActiveVLR>.Error("Ne postoji VLR u pripremi za taj seat");
         
         bool infrastructureRespone = await m_infrastructureClient.SetVMIp(vlr.VLRID, sesija.RoomId, seatId, ip);
 
         if (!infrastructureRespone)
-            return ServiceResult<string>.Error("Greska u infrastrukturi");
+            return ServiceResult<ActiveVLR>.Error("Greska u infrastrukturi");
 
         vlr.Status = VLRStatus.READY;
         vlr.IP = ip;
@@ -113,7 +139,7 @@ public class VLRService : IVLRService
         m_context.ActiveVLRs.Update(vlr);
         await m_context.SaveChangesAsync();
 
-        return ServiceResult<string>.Ok($"Dodeljen vlr uspesno");
+        return ServiceResult<ActiveVLR>.Ok(vlr);
     }
 
     public async Task<ServiceResult<ActiveVLR>> ProvideVLR(int sessionId, int seatId, int userId)
@@ -141,14 +167,14 @@ public class VLRService : IVLRService
         return ServiceResult<ActiveVLR>.Ok(vlr);   
     }
 
-    public async Task<ServiceResult<ActiveVLR>> ReleaseVLR(int sessionId, int userId)
+    public async Task<ServiceResult<ActiveVLR>> ReleaseVLR(int sessionId, int seatId, int userId)
     {
         var sesija = await m_context.Sessions.FirstOrDefaultAsync(s=>s.Id == sessionId);
 
         if (sesija == null)
             return ServiceResult<ActiveVLR>.Error("Ne postoji sesija!");
 
-        var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.UserId == userId);
+        var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.SeatId == seatId && v.UserId == userId);
 
         if (vlr == null)
             return ServiceResult<ActiveVLR>.Error("Ne postoji VLR sa taj userId u toj sesisji!");
@@ -172,7 +198,6 @@ public class VLRService : IVLRService
             }
 
             vlr.IP = null;
-            vlr.SeatId = null;
             vlr.RoomId = null;
             vlr.UserId = null;
             vlr.Status = VLRStatus.NULL;
@@ -192,16 +217,16 @@ public class VLRService : IVLRService
         return ServiceResult<ActiveVLR>.Ok(vlr);           
     }
 
-    public async Task<ServiceResult<string>> KillVLR(int sessionId, int seatId)
+    public async Task<ServiceResult<ActiveVLR>> KillVLR(int sessionId, int seatId)
     {
         var sesija = await m_context.Sessions.FirstOrDefaultAsync(s=>s.Id == sessionId);
 
         if (sesija == null)
-            return ServiceResult<string>.Error("Ne postoji sesija!");
+            return ServiceResult<ActiveVLR>.Error("Ne postoji sesija!");
 
         var vlr = await m_context.ActiveVLRs.FirstOrDefaultAsync(v => v.SessionId == sessionId && v.SeatId == seatId);
         if (vlr == null)
-            return ServiceResult<string>.Error("Ne postoji vlr na taj seat");
+            return ServiceResult<ActiveVLR>.Error("Ne postoji vlr na taj seat");
         
 
         // TODO PREPRAVI DA LEPSE BUDE A NE COPYPASTE
@@ -222,16 +247,15 @@ public class VLRService : IVLRService
         }
     
         vlr.IP = null;
-        vlr.SeatId = null;
         vlr.RoomId = null;
         vlr.UserId = null;
         vlr.Status = VLRStatus.NULL;
         vlr.LastStatusChange = DateTime.Now;
-
+        
         m_context.ActiveVLRs.Update(vlr);
         await m_context.SaveChangesAsync();
 
-        return ServiceResult<string>.Ok("Uspesno ubiven vlr");
+        return ServiceResult<ActiveVLR>.Ok(vlr);
     }
 
     public async Task<ServiceResult<VLRStatusInfoDTO>> GetStatusInfo(string vlrStatus)
