@@ -1,4 +1,5 @@
 using LabZakazivanjeAPI.Models;
+using LabZakazivanjeAPI.Models.DTOs;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -122,5 +123,20 @@ public class VLRController : ControllerBase
         {
             return BadRequest(result.ErrorMessage);
         }        
+    }
+
+    [HttpGet("GetAllInfo")]
+    public async Task<ActionResult<VLRStatusInfoDTO>> GetAllInfo()
+    {
+        var result = await m_vlrService.GetAllInfo();
+
+        if (result.Success)
+        {
+            return Ok(result.Data);
+        }
+        else
+        {
+            return BadRequest(result.ErrorMessage);
+        }   
     }
 }

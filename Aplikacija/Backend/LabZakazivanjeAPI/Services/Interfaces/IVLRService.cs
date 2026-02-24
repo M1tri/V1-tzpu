@@ -12,5 +12,6 @@ public interface IVLRService
     Task<ServiceResult<ActiveVLR>> ReleaseVLR(int sessionId, int userId);
     Task<ServiceResult<string>> KillVLR(int sessionId, int seatId);
     Task<ServiceResult<VLRStatusInfoDTO>> GetStatusInfo(string vlrStatus);
+    Task<ServiceResult<IEnumerable<VLRStatusInfoDTO>>> GetAllInfo();
     Task<ServiceResult<VLRStatusInfoDTO>> AddStatus(string statusName, string symbol, string color);
 }

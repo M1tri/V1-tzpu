@@ -70,6 +70,7 @@ public class RoomRasporedParser
                 var parsedRed = ParseRed(current.ToString());
                 result.Add(parsedRed);
                 current.Clear();
+                zagrade--;
                 continue;
             }
 

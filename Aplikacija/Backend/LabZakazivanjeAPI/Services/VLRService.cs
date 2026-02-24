@@ -249,6 +249,24 @@ public class VLRService : IVLRService
         });
     }
 
+    public async Task<ServiceResult<IEnumerable<VLRStatusInfoDTO>>> GetAllInfo()
+    {
+        var statusInfo = await m_context.VLRStatusInfos.ToListAsync();
+
+        List<VLRStatusInfoDTO> infos = [];
+        foreach (var s in statusInfo)
+        {
+            infos.Add(new VLRStatusInfoDTO
+            {
+                Naziv = s.Naziv,
+                Symbol = s.Symbol,
+                Color = s.Color
+            });
+        }
+
+        return ServiceResult<IEnumerable<VLRStatusInfoDTO>>.Ok(infos);
+    }
+
     public async Task<ServiceResult<VLRStatusInfoDTO>> AddStatus(string statusName, string symbol, string color)
     {
         var statusInfo = new VLRStatusInfo

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faCheck, faClone } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faCheck, faClone, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { SessionView } from "../DTOs/session";
+import RoomLayout from "./RoomLayout";
 
-export default function Form({ setMode, room, rooms, activities, onSessionAdded, editMode, editSessionData, onSelectedRoom }) {
+export default function Form({ setMode, room, rooms, activities, onSessionAdded, onSessionDeleted, editMode, editSessionData, onSelectedRoom }) {
 
     const [date, setDate] = useState("");
     const [startTime, setStartTime] = useState("12:00");
@@ -199,9 +200,38 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
         }
     }
 
+    const handleDelete = async () => {
+
+        const confirmDelete = window.confirm(
+            `Da li ste sigurni da želite da obrišete sesiju "${editSessionData.naziv}"?`
+        );
+        if (!confirmDelete) return;
+
+        try {
+            /*const response = await fetch(
+                `https://localhost:7213/api/sessions/DeleteSession/${editSessionData.id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (!response.ok) {
+                console.log(await response.text());
+                throw new Error("Greška pri brisanju sesije.");
+            }*/
+
+            onSessionDeleted(editSessionData.id); 
+            setMode("list");
+
+        } catch (err) {
+            console.error(err);
+            alert("Doslo je do greske prilikom brisanja sesije.");
+        }
+    };
+
     return (
         <div className="formaWrapper">
-            <h1>Dodavanje nove aktivnosti - Prostorija {selectedRoom.label}</h1>
+            <h1>Dodavanje nove sesije - Prostorija {selectedRoom.label}</h1>
             <div className="formaDiv">
                 <div className="formaLeftDiv">
                     <div className="formaLeft">
@@ -254,7 +284,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                             onChange={(e) => setEndTime(e.target.value)}
                         />
 
-                        <label className="form-label">Da li se aktivnost automatski aktivira u vreme početka?</label>
+                        <label className="form-label">Da li se sesija automatski aktivira u vreme početka?</label>
                         <div className="radioButtons">
                             <div>
                                 <input 
@@ -278,7 +308,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                             </div>
                         </div>
 
-                        <label className="form-label">Da li aktivnost automatski menja stanje u vreme kraja?</label>
+                        <label className="form-label">Da li sesija automatski menja stanje u vreme kraja?</label>
                         <div className="radioButtons">
                             <div>
                                 <input 
@@ -304,7 +334,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
 
                         {autoEnd === "yes" && (
                             <>
-                                <label className="form-label">Aktivnost prelazi u stanje: </label>
+                                <label className="form-label">Sesija prelazi u stanje: </label>
                                 <div className="radioButtons">
                                     <div>
                                     <input 
@@ -349,6 +379,15 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                             </button>
                         )}
 
+                        {editMode && (
+                            <button 
+                                className="btn btn-primary btnForm"
+                                onClick = {handleDelete}
+                            >
+                                <>Obriši <FontAwesomeIcon icon={faTrashCan} className="me-2" /></>
+                            </button>
+                        )}
+
                         <button 
                             className="btn btn-secondary btnForm"
                             onClick={() => setMode("list")}
@@ -358,9 +397,12 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
                     </div>
             </div>
 
-            <div className="addRight">
-                <h3>Dodatne informacije</h3>
-                <p>Ovde može da ide preview, kalendar, uputstva...</p>
+            <div className="formaRightDiv">
+                <div className="seatsLabelsDiv" style={{height: "fit-content"}}>
+                        <h4>Raspored prostorije {selectedRoom.label}</h4>
+                        <h4>Kapacitet: {rooms.find(r => r.id === selectedRoom.value)?.kapacitet}</h4>
+                </div>
+                <RoomLayout selectedRoom={rooms.find(r => r.id === selectedRoom.value)}/>
             </div>
             </div>
         </div>

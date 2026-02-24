@@ -5,6 +5,8 @@ import { RoomView } from './DTOs/room.js';
 import Overview from './Components/Overview.js';
 import Form from './Components/Form.js';
 import { ActivityView } from './DTOs/activity.js';
+import SessionManager from './Components/SessionManager.js';
+import LogIn from './Components/LogIn.js';
 
 function App() {
     const [data, setData] = useState([]);
@@ -17,6 +19,8 @@ function App() {
     const [mode, setMode] = useState("list"); 
     const [newlyAddedId, setNewlyAddedId] = useState(null);
     const [editSessionId, setEditSessionId] = useState(-1);
+    const [manageSessionId, setManageSessionId] = useState(-1);
+    const [finishedSessionId, setFinishedSessionId] = useState(-1);
 
     useEffect(() => {
         async function fetchRooms() {
@@ -27,7 +31,7 @@ function App() {
 
                 const json = await res.json();
 
-                const loadedRooms = json.map(r => new RoomView(r.id, r.naziv, r.kapacitet, r.raspored));
+                const loadedRooms = json.map(r => new RoomView(r.id, r.naziv, r.capacity, r.raspored));
 
                 setRooms(loadedRooms);
 
@@ -130,6 +134,61 @@ function App() {
         setNewlyAddedId(session.id);
     }
 
+    const handleSessionDeleted = (id) => {
+        setData(prev => prev.filter(s => s.id !== id));
+    };
+
+    const handleSetFading = async (id) => {
+        try {
+            const response = await fetch(`https://localhost:7213/api/vlr/Fade?sessionId=${id}`, {
+                method: "PUT"
+            });
+
+            if (!response.ok) {
+                alert(await response.text());
+                return;
+            }
+
+            setData(prev =>
+                prev.map(item =>
+                    item.id === id ? { ...item, status: "fading" } : item
+                )
+            );
+
+            setMode("list");
+
+        } 
+        catch (err) {
+            console.error("Error fading session:", err);
+        }
+    };
+
+    const handleSetFinished = async (id) => {
+        try {
+            const response = await fetch(`https://localhost:7213/api/vlr/Terminate?sessionId=${id}`, {
+                method: "PUT"
+            });
+
+            if (!response.ok) {
+                alert(await response.text());
+                return;
+            }
+
+            setData(prev =>
+                prev.map(item =>
+                    item.id === id ? { ...item, status: "finished" } : item
+                )
+            );
+
+            setMode("list");
+
+        } 
+        catch (err) 
+        {
+            console.error("Error finished session:", err);
+        }
+    };
+
     if (roomsLoading) return <div>Učitavanje prostorija...</div>;
     if (loading) return <div>Učitavanje sesija...</div>;
 
@@ -148,6 +207,9 @@ function App() {
                 newlyAddedId={newlyAddedId}
                 setNewlyAddedId={setNewlyAddedId}
                 setSessionEdit={setEditSessionId}
+                setManageSessionId={setManageSessionId}
+                onSessionAdded={handleSessionAdded}
+                onSessionDeleted = {handleSessionDeleted}
             />
         );
     }
@@ -177,11 +239,31 @@ function App() {
                 rooms = {rooms}
                 activities={activities}
                 onSessionAdded={handleSessionAdded}
+                onSessionDeleted={handleSessionDeleted}
                 editMode={true}
                 editSessionData={editSession}
                 onSelectedRoom={setSelectedRoom}
             />
         )       
+    }
+    else if (mode == "sessionManager")
+    {
+        const manageSession = data.find(s => s.id == manageSessionId);
+
+        content = (
+            <SessionManager
+                session={manageSession}
+                room={rooms.find(r => r.id === selectedRoom)}
+                mode = {mode}
+                setMode={setMode}
+                onSetFading={handleSetFading}
+                onSetFinished={handleSetFinished}
+            />
+        )
+    }
+    else if(mode == "login")
+    {
+        content = (<LogIn/>)
     }
 
     return (

@@ -325,6 +325,8 @@ public class SessionService : ISessionService
             m_context.ActiveVLRs.Remove(v);
 
         sesija.Stanje = SessionState.PLANNED;
+        m_context.Sessions.Update(sesija);
+        await m_context.SaveChangesAsync();
 
         return ServiceResult<string>.Ok("Sesija uspesno vracena u PLANNED");
     }
@@ -415,6 +417,9 @@ public class SessionService : ISessionService
         
         if (sesija.Stanje != SessionState.ACTIVE)
             return ServiceResult<string>.Error("Sesija mora biti u stanju ACTIVE da bi presala u FADING");
+
+        if (m_context.Sessions.Where(s => s.RoomId == sesija.RoomId && s.Stanje == SessionState.FADING).Any())
+            return ServiceResult<string>.Error("U prostoriji vec postoji FADING sesija.");
     
         sesija.Stanje = SessionState.FADING;
 

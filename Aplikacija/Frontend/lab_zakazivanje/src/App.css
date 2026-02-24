@@ -107,7 +107,7 @@ td
 h1
 {
     margin-top: 0;
-    text-align: center;
+    margin-bottom: 10px;
 }
 
 h4
@@ -289,12 +289,22 @@ h4
 
 .formaLeft
 {
-    border-right: 2px dashed black;
     padding: 20px 30px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     row-gap: 20px;
     align-items: center;
+}
+
+.formaRightDiv
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 60%;
+    padding: 20px;
+    padding-top: 10px;
 }
 
 .radioButtons
@@ -478,4 +488,163 @@ h4
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+.roomLayout
+{
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+    flex-grow: 1;
+    border-radius: 10px;
+    width: 100%;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.seat 
+{
+    position: relative;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.seat p
+{
+    margin: 0;
+    font-size: small;
+    text-align: center;
+}
+
+.empty-seat 
+{
+    background-color: transparent;
+}
+
+.manager
+{
+    display: flex;
+    gap: 50px;
+    padding: 10px;
+    padding-top: 0;
+}
+
+.managerLeft
+{
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    gap: 10px;
+    padding: 10px;
+}
+
+.managerRight
+{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    width: 60%;
+}
+
+.sesijaInfo 
+{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 20px;
+    align-items: center;
+    padding: 16px 20px;
+    
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.info 
+{
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.infoDugmici
+{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.btnInfo
+{
+    width: 50%;
+}
+
+.btnFading
+{
+    background-color: #f8d7da;
+}
+
+.btnFinished
+{
+    background-color: #e2e3e5;
+}
+
+.infoLabel
+{
+    font-weight: 500;
+}
+
+.resourcesButtons
+{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* kružić */
+.seat-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #555;
+    border-radius: 50%;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: white;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.seat-checkbox.checked 
+{
+    background: dodgerblue;
+    border-color: #1a73e8;
+}
+
+.seat-selected 
+{
+    background-color: #e6f2ff !important;
+    border: 2px solid #1a73e8 !important;
+}
+
+.seat-check-icon {
+    color: white;
+    font-size: 10px;
+    position: absolute;
+    top: 4px;
+    left: 3px;
+}
+
+.seatsLabelsDiv
+{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 40px;
 }

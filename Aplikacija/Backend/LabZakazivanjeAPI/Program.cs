@@ -5,6 +5,8 @@ using LabZakazivanjeAPI.Services;
 using LabZakazivanjeAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,22 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IVLRService, VLRService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IRoomsService, RoomsService>();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+})
+.AddCookie()
+.AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    options.CallbackPath = "/api/auth/google-callback";
+});
+
+Console.WriteLine("GOOGLE ID: " + builder.Configuration["Authentication:Google:ClientId"]);
+
+builder.Services.AddAuthorization();
 builder.Services.AddHttpClient<IInfrastructureClient, InfrastructureClient>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7213");
@@ -54,6 +72,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseCors("AllowAll");
 

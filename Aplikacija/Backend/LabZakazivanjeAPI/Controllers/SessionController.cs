@@ -93,4 +93,19 @@ public class SessionController : ControllerBase
             return BadRequest(session.ErrorMessage);
         }
     }
+
+    [HttpGet("GetSessionResourceStatus")]
+    public async Task<ActionResult<Dictionary<int, string>>> GetSessionResourceStatus(int sessionId)
+    {
+        var statuses = await m_sessionService.GetSessionResourceStatus(sessionId);
+
+        if (statuses.Success)
+        {
+            return Ok(statuses.Data);
+        }
+        else
+        {
+            return BadRequest(statuses.ErrorMessage);
+        }
+    }
 }

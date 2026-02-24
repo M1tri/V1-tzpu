@@ -9,9 +9,14 @@ import {
 } from "@tanstack/react-table";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faPenToSquare, faGear, faCircleUp, faCircleDown, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faPenToSquare, faGear, faCircleUp, faCircleDown, faEye, faClone, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { parseDate, parseTime } from "../Utils/helper";
+import { SessionView } from "../DTOs/session";
 
-export default function Tanstack({tableData, naslov, enableFeatures = true, newlyAddedId, setNewlyAddedId, onEditClicked, onSetNext, onSetPlanned, onSetActive, onViewResources})
+export default function Tanstack({tableData, naslov, enableFeatures = true, 
+                                newlyAddedId, setNewlyAddedId, onEditClicked, 
+                                onSetNext, onSetPlanned, onSetActive, onViewResources,
+                                onSessionAdded, onSessionDeleted})
 {
     const [pageIndex, setPageIndex] = useState(0);
     const [pageSize, setPageSize] = useState(3);
@@ -181,9 +186,9 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
             }
         );
         }
-        
-        const hasActive = tableData.some(row => row.status === "active");
-        if (hasActive) {
+
+        const hasActiveOrFading = tableData.some(row => row.status === "active" || row.status === "fading");
+        if (hasActiveOrFading) {
             baseCols.push(
             {
                 header: ({ column }) => <div>Upravljaj resursima</div>,
@@ -199,49 +204,37 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
         );
         }
 
-        const hasFading = tableData.some(row => row.status === "fading");
-        if (hasFading) {
+        const hasFinished = tableData.some(row => row.status === "finished");
+        if (hasFinished) {
             baseCols.push(
             {
-                header: ({ column }) => <div>Upravljaj resursima</div>,
-                accessorKey: "layout",
+                header: ({ column }) => <div>Kloniraj u planiranu</div>,
+                accessorKey: "cloneToPlanned",
                 cell: info => 
                 <button 
-                    className="btn btn-sm btn-warning btnPromote"
-                    onClick={() => onViewResources(info.row.original.id)}>
-                    <FontAwesomeIcon icon={faEye} />
+                    className="btn btn-sm btn-warning btnEdit"
+                    onClick={() => cloneFinishedSession(info.row.original.id)}>
+                    <FontAwesomeIcon icon={faClone} />
                 </button>,
                 enableSorting: false
             },
+            {
+                header: () => <div>Obriši</div>,
+                accessorKey: "deleteFinished",
+                cell: info => 
+                <button 
+                    className="btn btn-sm btn-warning btnEdit"
+                    onClick={() => onSessionDeleted(info.row.original.id)}
+                >
+                    <FontAwesomeIcon icon={faTrashCan} />
+                </button>,
+                enableSorting: false
+            }
         );
         }
 
         return baseCols;
     }, [tableData]);
-
-    function parseDate(datum)
-    {
-        let date = new Date(datum);
-
-        let dan = String(date.getDate()).padStart(2, '0');
-        let mesec = String(date.getMonth()+1).padStart(2,'0');
-        let godina = date.getFullYear();
-
-        let formatirano = `${dan}. ${mesec}. ${godina}.`;
-        return formatirano;
-    }
-
-    function parseTime(datum, vreme)
-    {
-        let time = new Date(`${datum}T${vreme}`); 
-
-        let hh = String(time.getHours()).padStart(2, '0');
-        let mm = String(time.getMinutes()).padStart(2, '0');
-
-        let formatirano = `${hh}:${mm}`;
-
-        return formatirano;
-    }
 
     const table = useReactTable({
         data: tableData,
@@ -265,6 +258,22 @@ export default function Tanstack({tableData, naslov, enableFeatures = true, newl
         getSortedRowModel: enableFeatures ? getSortedRowModel() : undefined,
         getFilteredRowModel: enableFeatures ? getFilteredRowModel() : undefined,
     });
+
+    const cloneFinishedSession = async (id) =>
+    {
+        //fetch za clone
+        const finishedSession = tableData.find(s => s.id == id);
+        const clonedSession = new SessionView(finishedSession.id + 1000, finishedSession.naziv, finishedSession.tip,
+            finishedSession.datum, finishedSession.vremePoc, finishedSession.vremeKraja, 
+            0, finishedSession.autoStart, finishedSession.autoEnd, finishedSession.autoState);
+
+        console.log(finishedSession);
+        console.log(clonedSession);
+
+        onSessionAdded(clonedSession);
+    }
+
+    
 
     return (
         <div className="container mt-4 tabelaDiv">

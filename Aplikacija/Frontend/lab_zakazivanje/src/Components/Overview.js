@@ -1,8 +1,9 @@
 import Tanstack from "./Tanstack.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComputer, faPlus, faCalendarDays, faClockRotateLeft, faRectangleList, faHourglassHalf, faAnglesRight} from "@fortawesome/free-solid-svg-icons";
+import Select from "react-select";
 
-export default function Overview({ data, setData, rooms, selectedRoom, handleRoomChange, setMode, newlyAddedId, setNewlyAddedId, setSessionEdit }) {
+export default function Overview({ data, setData, rooms, selectedRoom, handleRoomChange, setMode, newlyAddedId, setNewlyAddedId, setSessionEdit, setManageSessionId, onSessionAdded, onSessionDeleted }) {
 
     const sortedData = [...data].sort((a, b) => b.id - a.id);
 
@@ -12,8 +13,24 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
     const plannedData = sortedData.filter(x => x.status === "planned");
     const finishedData = sortedData.filter(x => x.status === "finished");
 
-    function handleSetNext(id) 
+    const optionsR = rooms.map(room => ({
+        value: room.id,
+        label: room.naziv
+    }));
+
+    const handleSetNext = async (id) =>
     {
+        const response = await fetch(`https://localhost:7213/api/vlr/PromoteAsNext?sessionId=${id}`,
+            {
+                method: "PUT"
+            });
+
+        if (!response.ok)
+        {
+            alert(await response.text());
+            return;
+        }
+
         const updated = data.map(item =>
             item.id === id ? { ...item, status: "next" } : item
         );
@@ -21,24 +38,48 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
         setData(updated);
     }
 
-    function handleSetPlanned(id) 
+    const handleSetPlanned = async (id) =>
     {
+        const response = await fetch(`https://localhost:7213/api/vlr/DemoteToPlanned?sessionId=${id}`,
+            {
+                method: "PUT"
+            });
+
+        if (!response.ok)
+        {
+            alert(await response.text());
+            return;
+        }
+
         const updated = data.map(item =>
             item.id === id ? { ...item, status: "planned" } : item
         );
         setData(updated);
     }
 
-    function handleSetActive(id) 
+    const handleSetActive = async (id) => 
     {
+        const response = await fetch(`https://localhost:7213/api/vlr/Activate?sessionId=${id}`,
+            {
+                method: "PUT"
+            });
+
+        if (!response.ok)
+        {
+            alert(await response.text());
+            return;
+        }
+
         const updated = data.map(item =>
             item.id === id ? { ...item, status: "active" } : item
         );
         setData(updated);
     }
 
-    function handleViewResources(id) {
-        console.log("Upravljaj resursima za:", id);
+    function handleViewResources(id) 
+    {
+        setManageSessionId(id);
+        setMode("sessionManager");
     }
 
     return (
@@ -52,19 +93,12 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
                         Izaberite prostoriju:
                     </label>
 
-                    <select 
-                        className="form-select"
-                        value={selectedRoom}
-                        onChange={(e) => handleRoomChange(e.target.value)}
-                    >
-                        {rooms.map((room) => (
-                            <option 
-                                key={room.id} 
-                                value={room.id}>
-                                {room.naziv}
-                            </option>
-                        ))}
-                    </select>
+                    <Select
+                        options={optionsR}
+                        value={optionsR.find(o => o.value === selectedRoom)}
+                        onChange={(selectedOption) => handleRoomChange(selectedOption.value)}
+                        isSearchable={true}
+                    />
                 </div>
 
                 <div className="trAkt">
@@ -85,8 +119,8 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
                             tableData={[...activeData, ...fadingData]}
                             naslov={
                             <>
-                                <FontAwesomeIcon icon={faRectangleList} className="me-2" /> 
-                                {fadingData.length > 0 ? "Trenutne aktivne sesije" : "Trenutno aktivna sesija"}
+                                <FontAwesomeIcon icon={faHourglassHalf} className="me-2" /> 
+                                {fadingData.length > 0 ? "Trenutno aktivne sesije" : "Trenutno aktivna sesija"}
                             </>
                             }
                             enableFeatures={false}
@@ -116,6 +150,8 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
                 <Tanstack 
                     tableData={finishedData} 
                     naslov={<><FontAwesomeIcon icon={faClockRotateLeft} className="me-2" /> Istorija aktivnosti</>} 
+                    onSessionAdded={onSessionAdded}
+                    onSessionDeleted={onSessionDeleted}
                 />
             </div>
         </div>
