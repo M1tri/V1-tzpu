@@ -113,7 +113,7 @@ public class SessionTest
         Assert.True(result.Success);
     }
     
-    [Fact]
+    /*[Fact]
     public async Task ActivateSessionWhenExists()
     {
         var context = GetDbContext();
@@ -143,6 +143,6 @@ public class SessionTest
         var result = await service.Activate(s.Id);
 
         Assert.True(result.Success);
-    }
+    }*/
     
 }

@@ -108,6 +108,7 @@ h1
 {
     margin-top: 0;
     margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 h4
@@ -427,7 +428,7 @@ h4
 .tooltip::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: 120%; /* iznad elementa */
+  bottom: 120%; 
   left: 50%;
   transform: translateX(-50%);
   background-color: #333;
@@ -546,6 +547,7 @@ h4
     gap: 10px;
     padding: 10px;
     width: 60%;
+    transform: translateY(-70px);
 }
 
 .sesijaInfo 
@@ -577,7 +579,7 @@ h4
 
 .btnInfo
 {
-    width: 50%;
+    width: 100%;
 }
 
 .btnFading
@@ -745,4 +747,76 @@ h4
 .loginDiv button 
 {
     width: 80%;
+}
+
+.dugmiciLegenda
+{
+    display: flex;
+    gap: 50px;
+}
+
+.legendaDiv
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 10px;
+    width: 60%;
+    transform: translateY(-30px);
+}
+
+.legendaGrid
+{
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 5px;
+    align-items: center;
+}
+
+.color-dot 
+{
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.color-dot.ready 
+{
+    background-color: palegreen;
+}
+
+.color-dot.provided 
+{
+    background-color: #f5c2c7;
+}
+
+.color-dot.released 
+{
+    background-color: #ffc078;
+}
+
+.color-dot.preparing 
+{
+    background-color: #ffe69c;
+}
+
+.color-dot.none 
+{
+    background-color: gainsboro;
+}
+
+.status-active 
+{
+    color: green;
+}
+
+.status-fading 
+{
+    color: red;
 }

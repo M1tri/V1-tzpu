@@ -93,6 +93,8 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                 return updated;
             });
         }
+
+        unselectAllSeats();
     }
 
     const ProvideResources = async () => {
@@ -121,6 +123,8 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                 return updated;
             });
         }
+
+        unselectAllSeats();
     }
 
     const ReleaseResources = async () => {
@@ -156,6 +160,8 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                 return updated;
             });
         }
+
+        unselectAllSeats();
     }
 
     const KillResources = async () => {
@@ -187,6 +193,8 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                 return updated;
             });
         }
+
+        unselectAllSeats();
     }
 
     if (VLRStatusesLoading) return <div>Učitavanje statusa...</div>;
@@ -217,7 +225,12 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                         <label className="infoLabel">{parseTime(session.datum, session.vremeKraja)}</label>
 
                         <label>Status:</label>
-                        <label className="infoLabel">{session.status.toUpperCase()}</label>
+                        <label 
+                            className="infoLabel"
+                            style={{ color: session.status === "active" ? "#81c784" : session.status === "fading" ? "#f29fa5" : "black" }}
+                        >
+                            {session.status.toUpperCase()}
+                        </label>
 
                         <label>Automatski prelazi u krajnje stanje:</label>
                         <label className="infoLabel">{session.autoEnd ? "Da" : "Ne"}</label>
@@ -232,23 +245,57 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                     <div className="info">
                         <FontAwesomeIcon icon={faToggleOn} className="me-2" />
                         <h4>Opcije</h4>
-                    </div>      
-                    <div className="infoDugmici">
-                        {session.status == "active" && (<button className="btnForm btnFading btnInfo"
-                        onClick={async () => await onSetFading(session.id)}
-                        >
-                            Prebaci sesiju u FADING
-                        </button>
-                        )}
-                        <button className="btnForm btnFinished btnInfo"
-                        onClick={async () => await onSetFinished(session.id)}>
-                            Prebaci sesiju u FINISHED
-                        </button>
-                        <button 
-                            className="btnForm btnInfo"
-                            onClick = {() => setMode("list")}>
-                            <><FontAwesomeIcon icon={faCircleChevronLeft} className="me-2" /> Vrati se nazad</>
-                        </button>
+                    </div>    
+                    <div className="dugmiciLegenda">
+                        <div className="infoDugmici">
+                            {session.status == "active" && (<button className="btnForm btnFading btnInfo"
+                            onClick={async () => await onSetFading(session.id)}
+                            >
+                                Prebaci sesiju u FADING
+                            </button>
+                            )}
+                            <button className="btnForm btnFinished btnInfo"
+                            onClick={async () => await onSetFinished(session.id)}>
+                                Prebaci sesiju u FINISHED
+                            </button>
+                            <button 
+                                className="btnForm btnInfo"
+                                onClick = {() => setMode("list")}>
+                                <><FontAwesomeIcon icon={faCircleChevronLeft} className="me-2" /> Vrati se nazad</>
+                            </button>
+                        </div>  
+                        <div className="legendaDiv">
+                            <h4>LEGENDA</h4>
+                            <div className="legendaGrid">
+                                <h4>Status</h4>
+                                <h4>Značenje</h4>
+
+                                <label>
+                                    <span class="color-dot ready"></span> ✓ 
+                                </label>
+                                <label>Spreman za dodelu</label>
+
+                                <label>
+                                    <span class="color-dot provided"></span> ⬤
+                                </label>
+                                <label>Dodeljen (zauzet)</label>
+
+                                <label>
+                                    <span class="color-dot released"></span> ⭘
+                                </label>
+                                <label>Ponovo dostupan</label>
+
+                                <label>
+                                    <span class="color-dot preparing"></span> ...
+                                </label>
+                                <label>U pripremi (čeka se)</label>
+
+                                <label>
+                                    <span class="color-dot none"></span> – 
+                                </label>
+                                <label>Nije spreman</label>
+                            </div>
+                        </div>
                     </div>           
                 </div>
                 <div className="managerRight">
@@ -272,10 +319,27 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                     </div>
                     <div className="resourcesButtons">
                         <h4>Primeni operaciju:</h4>
-                        <button onClick={PrepareResources} className="btnForm">Prepare</button>
-                        <button onClick={ProvideResources} className="btnForm">Provide</button>
-                        <button onClick={ReleaseResources} className="btnForm">Release</button>
-                        <button onClick={KillResources} className="btnForm">Kill</button>
+                        <button 
+                            onClick={PrepareResources} 
+                            className="btnForm"
+                            style={{backgroundColor: "palegreen"}}>
+                            Pripremi resurse
+                        </button>
+                        <button 
+                            onClick={ProvideResources} 
+                            className="btnForm"
+                            style={{backgroundColor: "#f5c2c7"}}>
+                            Dodeli korisniku</button>
+                        <button 
+                            onClick={ReleaseResources} 
+                            className="btnForm"
+                            style={{backgroundColor: "#ffc078"}}>
+                            Oduzmi od korisnika</button>
+                        <button 
+                            onClick={KillResources} 
+                            className="btnForm"
+                            style={{backgroundColor: "gainsboro"}}>
+                            Uništi resurse</button>
                     </div>
                 </div>
             </div>
