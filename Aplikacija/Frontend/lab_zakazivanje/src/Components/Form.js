@@ -208,8 +208,8 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
         if (!confirmDelete) return;
 
         try {
-            /*const response = await fetch(
-                `https://localhost:7213/api/sessions/DeleteSession/${editSessionData.id}`,
+            const response = await fetch(
+                `https://localhost:7213/api/sessions/DeleteSession?sessionId=${editSessionData.id}`,
                 {
                     method: "DELETE",
                 }
@@ -218,7 +218,7 @@ export default function Form({ setMode, room, rooms, activities, onSessionAdded,
             if (!response.ok) {
                 console.log(await response.text());
                 throw new Error("Greška pri brisanju sesije.");
-            }*/
+            }
 
             onSessionDeleted(editSessionData.id); 
             setMode("list");

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Security.Cryptography.X509Certificates;
 using LabZakazivanjeAPI.Helpers;
 using LabZakazivanjeAPI.Models;
@@ -157,6 +158,68 @@ public class SessionService : ISessionService
         return ServiceResult<ViewSessionDTO>.Ok(view);
     }
 
+
+    public async Task<ServiceResult<ViewSessionDTO>> CloneSession(int sessionId)
+    {
+        var sesija = await m_context.Sessions
+        .Include(s => s.Prostorija)
+        .Include(s => s.Aktivnost)
+        .ThenInclude(a => a!.Tip)
+        .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+        if (sesija == null)
+            return ServiceResult<ViewSessionDTO>.Error("Nepostojeca sesija lol!");
+
+        Session s = new Session
+        {
+            Prostorija = sesija.Prostorija,
+            Aktivnost = sesija.Aktivnost,
+            Datum = sesija.Datum,
+            VremePocetka = sesija.VremePocetka,
+            VremeKraja = sesija.VremeKraja,
+            AutomatskiKraj = sesija.AutomatskiKraj,
+            AutomatskiPocetak = sesija.AutomatskiPocetak,
+            AutomatskoStanjeZavrsavanja = sesija.AutomatskoStanjeZavrsavanja,
+            Stanje = SessionState.PLANNED
+        };
+
+        await m_context.Sessions.AddAsync(s);
+        await m_context.SaveChangesAsync();
+
+        ViewSessionDTO view = new()
+        {
+            Id = s.Id,
+            NazivProstorije = s.Prostorija!.Naziv,
+            NazivAktivnosti = s.Aktivnost!.Name,
+            TipAktivnosti = s.Aktivnost!.Tip!.Naziv,
+            Datum = s.Datum,
+            VremePocetka = s.VremePocetka,
+            VremeKraja = s.VremeKraja,
+            Stanje = s.Stanje,
+            AutomatskiKraj = s.AutomatskiKraj,
+            AutomatskiPocetak = s.AutomatskiPocetak,
+            AutomatskoKrajnjeStanje = s.AutomatskoStanjeZavrsavanja
+        };
+
+        return ServiceResult<ViewSessionDTO>.Ok(view);
+    }
+
+    public async Task<ServiceResult<string>> DeleteSession(int sessionId)
+    {
+        var sesija = await m_context.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId);
+
+        if (sesija == null)
+            return ServiceResult<string>.Error("Nepostojeca sesija!");
+
+        if (sesija.Stanje != SessionState.PLANNED && sesija.Stanje != SessionState.FINISHED)
+            return ServiceResult<string>.Error("Mozete brisati samo zavrsenu ili planiranu sesiju");
+
+        m_context.Sessions.Remove(sesija);
+        await m_context.SaveChangesAsync();
+
+        return ServiceResult<string>.Ok("Uspesnooo");
+    }
+
     public async Task<ServiceResult<ViewSessionDTO>> EditSession(UpdateSessionDTO s)
     {
         var sesija = await m_context
@@ -237,35 +300,34 @@ public class SessionService : ISessionService
 
         return ServiceResult<ViewSessionDTO>.Ok(view);
     }
-
-    public async Task<ServiceResult<Dictionary<int, string>>> GetSessionResourceStatus(int sessionId)
+    public async Task<ServiceResult<Dictionary<int, ResourceInfo>>> GetSessionResourceStatus(int sessionId)
     {
-        Dictionary<int, string> result = [];
+        Dictionary<int, ResourceInfo> result = [];
 
         var sesija = await m_context.Sessions
         .Include(s => s.Prostorija)
         .FirstOrDefaultAsync(s => s.Id == sessionId);
 
         if (sesija == null)
-            return ServiceResult<Dictionary<int, string>>.Error("Ne postoji sesija!");
+            return ServiceResult<Dictionary<int, ResourceInfo>>.Error("Ne postoji sesija!");
 
         var seatIds = RoomRasporedParser.GetSeatIds(sesija.Prostorija!.Raspored);
         foreach (int seat in seatIds)
         {
-            result.Add(seat, VLRStatus.NULL);
+            result.Add(seat, new ResourceInfo(VLRStatus.NULL, null));
         }
 
         var vlrStatuses = await m_context.ActiveVLRs
         .Where(v => v.SessionId == sessionId && v.SeatId != null)
-        .Select(v => new {v.SeatId, v.Status})
+        .Select(v => new {v.SeatId, v.Status, v.UserId})
         .ToListAsync();
 
         foreach (var v in vlrStatuses)
         {
-            result[v.SeatId!.Value] = v.Status;
+            result[v.SeatId!.Value] = new ResourceInfo(v.Status, v.UserId);
         }
 
-        return ServiceResult<Dictionary<int, string>>.Ok(result);
+        return ServiceResult<Dictionary<int, ResourceInfo>>.Ok(result);
     }
 
     public async Task<ServiceResult<string>> PromoteAsNext(int sessionId)
@@ -351,7 +413,7 @@ public class SessionService : ISessionService
         }
 
         var result = await GetSessionResourceStatus(sesija.Id);
-        Dictionary<int, string> seatStatuses;
+        Dictionary<int, ResourceInfo> seatStatuses;
         if (result.Success)
         {
             seatStatuses = result.Data!;
@@ -383,7 +445,7 @@ public class SessionService : ISessionService
         else
         {
             result = await GetSessionResourceStatus(fadingSession.Id);
-            Dictionary<int, string> fadingSeasonSetIps;
+            Dictionary<int, ResourceInfo> fadingSeasonSetIps;
 
             if(result.Success)
                 fadingSeasonSetIps = result.Data!;
@@ -392,7 +454,7 @@ public class SessionService : ISessionService
 
             foreach (var seat in seatIps)
             {
-                if (fadingSeasonSetIps.TryGetValue(seat.Id!.Value, out string? value) && value == VLRStatus.PROVIDED)
+                if (fadingSeasonSetIps.TryGetValue(seat.Id!.Value, out ResourceInfo? value) && value.VlrStatus == VLRStatus.PROVIDED)
                     continue;
                 await m_vlrService.ReadyVLR(sessionId, seat.Id.Value, seat.IP!);
             }

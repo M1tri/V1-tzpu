@@ -2,6 +2,7 @@ import Tanstack from "./Tanstack.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComputer, faPlus, faCalendarDays, faClockRotateLeft, faRectangleList, faHourglassHalf, faAnglesRight} from "@fortawesome/free-solid-svg-icons";
 import Select from "react-select";
+import { SessionView } from "../DTOs/session.js";
 
 export default function Overview({ data, setData, rooms, selectedRoom, handleRoomChange, setMode, newlyAddedId, setNewlyAddedId, setSessionEdit, setManageSessionId, onSessionAdded, onSessionDeleted }) {
 
@@ -82,6 +83,56 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
         setMode("sessionManager");
     }
 
+    const handleClonedSession = async (id) => {
+        
+        const response = await fetch(`https://localhost:7213/api/sessions/CloneSession?sessionId=${id}`,
+            {
+                method: "POST"
+            });
+
+        if (!response.ok)
+        {
+            alert(await response.text());
+            return;
+        }
+
+        const savedSession = await response.json();
+        
+        onSessionAdded(new SessionView(
+            savedSession.id,
+            savedSession.nazivAktivnosti,
+            savedSession.tipAktivnosti,
+            savedSession.datum,
+            savedSession.vremePocetka,
+            savedSession.vremeKraja,
+            savedSession.stanje,
+            savedSession.automatskiPocetak,
+            savedSession.automatskiKraj,
+            savedSession.automatskoKrajnjeStanje
+        ));
+    };
+
+    const handleDeletedSession = async (id) => {
+        const confirmDelete = window.confirm(
+            `Da li ste sigurni da želite da obrišete sesiju ?}"?`
+        );
+        if (!confirmDelete) return;
+
+        const response = await fetch(`https://localhost:7213/api/sessions/DeleteSession?sessionId=${id}`,
+            {
+                method: "DELETE"
+            });
+
+        if (!response.ok)
+        {
+            alert(await response.text());
+            return;
+        }
+
+        onSessionDeleted(id);
+    };
+
+
     return (
         <div className='mainAktivnosti'>
             <div className='aktivnostiLeft'>
@@ -150,8 +201,8 @@ export default function Overview({ data, setData, rooms, selectedRoom, handleRoo
                 <Tanstack 
                     tableData={finishedData} 
                     naslov={<><FontAwesomeIcon icon={faClockRotateLeft} className="me-2" /> Istorija aktivnosti</>} 
-                    onSessionAdded={onSessionAdded}
-                    onSessionDeleted={onSessionDeleted}
+                    onSessionCloned={handleClonedSession}
+                    onSessionDeleted={handleDeletedSession}
                 />
             </div>
         </div>

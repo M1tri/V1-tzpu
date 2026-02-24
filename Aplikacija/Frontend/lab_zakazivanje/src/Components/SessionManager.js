@@ -9,6 +9,7 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
     const [selectedSeatIDs, setSelectedSeatIDs] = useState([]);
     const [VLRStatuses, setVLRStatuses] = useState({});
     const [VLRStatusesLoading, setVLRStatusesLoading] = useState(true);
+    const [freeUserId, setFreeUserId] = useState(1);
 
     const allSeatIDs = room.raspored
     .flat()
@@ -41,11 +42,9 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
 
                 const json = await res.json();
 
-                console.log(json);
-
                 for (const seat in json)
                 {
-                    VLRStatuses[seat]=json[seat];
+                    VLRStatuses[seat]={status: json[seat].vlrStatus, userId : json[seat].userId};
                 }
 
                 setVLRStatuses(VLRStatuses);
@@ -61,6 +60,78 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
 
         fetchStatuses();
     }, []);
+
+    const PrepareResources = async () => {
+
+    }
+
+    const ProvideResources = async () => {
+        for (const seatId of selectedSeatIDs) {
+            const user = freeUserId;
+            setFreeUserId(freeUserId + 1);
+
+            const response = await fetch(`https://localhost:7213/api/vlr/Provide?sessionId=${session.id}&seatId=${seatId}&userId=${user}`,
+            {
+                method: "PUT"
+            });
+
+            if (!response.ok)
+            {
+                alert(await response.text());
+                continue;
+            }
+            
+            setVLRStatuses(prev => {
+                const updated = { ...prev };
+                updated[seatId].status = "provided";
+                updated[seatId].userId = user;
+                return updated;
+            });
+
+
+            const data = await response.json();
+            console.log(data);
+        }
+    }
+
+    const ReleaseResources = async () => {
+        console.log(VLRStatuses);
+
+        for (const seatId of selectedSeatIDs) {
+            const user = VLRStatuses[seatId].userId;
+
+            if (user == null)
+            {
+                alert("Nema lol");
+                continue;
+            }
+
+            const response = await fetch(`https://localhost:7213/api/vlr/Release?sessionId=${session.id}&seatId=${seatId}&userId=${user}`,
+            {
+                method: "PUT"
+            });
+
+            if (!response.ok)
+            {
+                alert(await response.text());
+                continue;
+            }
+
+            setVLRStatuses(prev => {
+                const updated = { ...prev };
+                updated[seatId].status = "released";
+                updated[seatId].userId = null;
+                return updated;
+            });
+
+            const data = await response.json();
+            console.log(data);
+        }
+    }
+
+    const KillResources = async () => {
+
+    }
 
     if (VLRStatusesLoading) return <div>Učitavanje statusa...</div>;
 
@@ -145,10 +216,10 @@ export default function SessionManager({session, room, mode, setMode, onSetFadin
                     </div>
                     <div className="resourcesButtons">
                         <h4>Primeni operaciju:</h4>
-                        <button className="btnForm">Kill</button>
-                        <button className="btnForm">Prepare</button>
-                        <button className="btnForm">Provide</button>
-                        <button className="btnForm">Jos nesto</button>
+                        <button onClick={PrepareResources} className="btnForm">Prepare</button>
+                        <button onClick={ProvideResources} className="btnForm">Provide</button>
+                        <button onClick={ReleaseResources} className="btnForm">Release</button>
+                        <button onClick={KillResources} className="btnForm">Kill</button>
                     </div>
                 </div>
             </div>

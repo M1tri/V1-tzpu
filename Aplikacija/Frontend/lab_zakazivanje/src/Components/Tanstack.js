@@ -16,7 +16,7 @@ import { SessionView } from "../DTOs/session";
 export default function Tanstack({tableData, naslov, enableFeatures = true, 
                                 newlyAddedId, setNewlyAddedId, onEditClicked, 
                                 onSetNext, onSetPlanned, onSetActive, onViewResources,
-                                onSessionAdded, onSessionDeleted})
+                                onSessionCloned, onSessionDeleted})
 {
     const [pageIndex, setPageIndex] = useState(0);
     const [pageSize, setPageSize] = useState(3);
@@ -262,6 +262,7 @@ export default function Tanstack({tableData, naslov, enableFeatures = true,
     const cloneFinishedSession = async (id) =>
     {
         //fetch za clone
+
         const finishedSession = tableData.find(s => s.id == id);
         const clonedSession = new SessionView(finishedSession.id + 1000, finishedSession.naziv, finishedSession.tip,
             finishedSession.datum, finishedSession.vremePoc, finishedSession.vremeKraja, 
@@ -270,7 +271,7 @@ export default function Tanstack({tableData, naslov, enableFeatures = true,
         console.log(finishedSession);
         console.log(clonedSession);
 
-        onSessionAdded(clonedSession);
+        onSessionCloned(id);
     }
 
     

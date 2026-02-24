@@ -79,6 +79,36 @@ public class SessionController : ControllerBase
         }
     }
 
+    [HttpPost("CloneSession")]
+    public async Task<ActionResult<Session>> CloneSession([FromQuery] int sessionId)
+    {
+        var session = await m_sessionService.CloneSession(sessionId);
+
+        if (session.Success)
+        {
+            return Ok(session.Data);
+        }
+        else
+        {
+            return BadRequest(session.ErrorMessage);
+        }
+    }
+
+    [HttpDelete("DeleteSession")]
+    public async Task<ActionResult<Session>> DeleteSessiona([FromQuery] int sessionId)
+    {
+        var session = await m_sessionService.DeleteSession(sessionId);
+
+        if (session.Success)
+        {
+            return Ok(session.Data);
+        }
+        else
+        {
+            return BadRequest(session.ErrorMessage);
+        }
+    }
+
     [HttpPut("EditSession")]
     public async Task<ActionResult<Session>> EditSession([FromBody] UpdateSessionDTO s)
     {

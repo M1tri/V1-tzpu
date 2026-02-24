@@ -80,7 +80,7 @@ export default function RoomLayout({ selectedRoom, mode, selectedSeatIDs = [], t
                                     <p>IP:</p>
                                     <p>{celija.seatIP}</p>
                                     {mode === "sessionManager" && celija.seatID != null && (
-                                        <p>Status: {statusInfo[vrlStatuses[celija.seatID]].simbol}</p>
+                                        <p>Status: {statusInfo[vrlStatuses[celija.seatID].status].simbol}</p>
                                     )}
                                 </div>
                             </>
